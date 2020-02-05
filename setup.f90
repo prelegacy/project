@@ -35,28 +35,31 @@ module setup
             P =(/0.76,0.05,0.03,0.16/)
 
 
-                n = (100e3)/200
+                n = (100e3)/500
                 allocate(r(n),dr(n))
-                    r= (/(i,i=0,INT(100e3),200)/)
+                    r= (/(i,i=0,INT(100e3),500)/)
                 do i = 1, n
                     if ( i < n ) then
                         dr(i) = r(i+1) -r(i)
                     else if (i == n) then
                         dr(i)= r(i) - r(i-1)
                     end if                
+                    
                 end do
 
 
-                n = INT((60e6-2.98e6)/24000)
+                n = INT((60e6-2.98e6)/12000)
                 !print*, 'n =',n
                 allocate(t(n),dt(n))
-                t = (/(i,i=INT(2.98e6),INT(60e6),24000)/)
+
+                t = (/(i,i=INT(2.98e6),INT(60e6),n)/)
                 do i = 1, n
                     if ( i < n ) then
                         dt(i) = t(i+1) -t(i)
                     else if (i == n) then
                         dt(i)= t(i) - t(i-1)
-                    end if                
+                    end if  
+                   
                 end do
 
             !Latent heat fusion for phases (Jkg^-1)

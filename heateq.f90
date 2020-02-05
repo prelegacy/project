@@ -64,22 +64,23 @@ contains
 
         !Computing T at each time step
         !Computing heat term with H abundance of Al and Fe
-        do nJ = 1,15!J-1
+        do nJ = 1,J-1!J-1
             ! print*,'timestep ',nJ
-            do nN = 2,15-1
-                stab = stability(dt(nJ),dr(nN)) 
-                print*,'stab =', stab
+            do nN = 2,N-1
+                stab = stability(dt(1),dr(1)) 
+                ! print*,'dt =',dt(1),'dr =',dr(1)
+                ! print*,'stab =', stab
                 ! print*,'Spacestep ',nN
                 q = heat(fal(1), al, E_al, tau_al, ffe(1),fe,E_fe,tau_fe, t(nJ+1))
-                firstterm = (2*bulkk(1,nN)*dt(nJ)/(rho(1)*bulkc*(dr(nN)**2)))*(temp(nJ,nN+1)-temp(nJ,nN-1))
-                secondterm =  (bulkk(1,nN)*dt(nJ)/(rho(1)*bulkc*(dr(nN)**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN))
-                thirdterm = temp(nJ,nN)+((dt(nJ)/bulkc)*q)
+                firstterm = (2*bulkk(1,nN)*dt(1)/(rho(1)*bulkc*(dr(1)**2)))*(temp(nJ,nN+1)-temp(nJ,nN-1))
+                secondterm =  (bulkk(1,nN)*dt(1)/(rho(1)*bulkc*(dr(1)**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN))
+                thirdterm = temp(nJ,nN)+((dt(1)/bulkc)*q)
                 temp(nJ+1,nN) = firstterm+secondterm+thirdterm
                 temp(nJ+1,1)=temp(nJ+1,2)
-                print*,thirdterm
-                ! print*,temp(nJ+1,1)               
+                ! print*,temp(nJ+1,1)
+                           
             enddo
-            do i = 1,15
+            do i = 1,N
                 do L = 1,5
                      Hsil(L,i)=Hsil(L,i)-bulkc*(temp(nJ+1,nN)-M(1,L))
                      Hconj(L,i)=Hconj(L,i)-bulkc*(temp(nJ+1,nN)-M(4,L))
@@ -109,7 +110,7 @@ contains
         !     do nN = 2,N-1
         !         ! print*,'Spacestep ',nN
         !         print*,-temp(nJ,nN-1)
-        !         secondterm =  (bulkk(1,nN)*dt(nJ)/(rho(1)*bulkc*(dr(nN)**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN))
+        !         secondterm =  (bulkk(1,nN)*dt(1)/(rho(1)*bulkc*(dr(1)**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN))
         !     enddo
         ! enddo
     end subroutine heateqn
