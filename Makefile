@@ -1,5 +1,6 @@
 FC=gfortran
-FFLAGS=-O3 -fdefault-real-8 -ffpe-trap=invalid,zero,overflow -O -fcheck=all -g -fbacktrace
+# FFLAGS=-O3 -fdefault-real-8 -ffpe-trap=invalid,zero,overflow -O -fcheck=all -g -fbacktrace
+FFLAGS=-O3 -ffpe-trap=invalid,zero,overflow -O -fcheck=all -g -fbacktrace
 ifeq ($(DEBUG), yes)
   FFLAGS+=-fcheck=all -ffpe-trap=invalid,zero,overflow
 endif

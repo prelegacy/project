@@ -4,7 +4,7 @@ module functions
 
     !Determines the stability of the finite difference method
     function stability(dt,dr) 
-        integer, intent(in) :: dt,dr
+        real, intent(in) :: dt,dr
         real:: stability
         
         stability = dt/(dr**2)
@@ -20,9 +20,9 @@ module functions
 
     end function heat
 
-    function reynolds(temp,M,H,Hin,bulkc,P)
+    function reynolds(temp,M,H,Hin,c,P)
         real,dimension(2):: reynolds
-        real,intent(in) :: temp,M,Hin,bulkc,P
+        real,intent(in) :: temp,M,Hin,c,P
         real:: T2,T,H
 
         T = temp     
@@ -31,7 +31,7 @@ module functions
             if ( H>=Hin ) then
                 H = Hin 
             else
-                T2 = T+P*((Hin-H)/bulkc)
+                T2 = T+P*((Hin-H)/c)
                 if ( T2 < M ) then
                     T = T2
                     H = Hin
@@ -43,7 +43,7 @@ module functions
             if ( H <= 0 ) then
                 H = 0
             else
-                T2 = T - P*((H/bulkc))
+                T2 = T - P*((H/c))
                 if ( T2 > M ) then
                     T = T2
                     H = 0

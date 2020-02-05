@@ -10,7 +10,8 @@ contains
         real, intent(inout):: al, E_al, tau_al, fe,E_fe,tau_fe
         real,allocatable,dimension(:,:),intent(in)::Hin,M
         real,intent(in)::init,bdry
-        real :: bulkc, firstterm,secondterm,thirdterm,fourthterm
+        real :: bulkc, firstterm,secondterm,thirdterm,stab
+        real,dimension(2)::th
         real, intent(out)::q
         integer, parameter:: Reg = 2
         integer:: N, J,I,nN,nJ,L
@@ -63,9 +64,11 @@ contains
 
         !Computing T at each time step
         !Computing heat term with H abundance of Al and Fe
-        do nJ = 1,5!J-1
+        do nJ = 1,15!J-1
             ! print*,'timestep ',nJ
-            do nN = 2,N-1
+            do nN = 2,15-1
+                stab = stability(dt(nJ),dr(nN)) 
+                print*,'stab =', stab
                 ! print*,'Spacestep ',nN
                 q = heat(fal(1), al, E_al, tau_al, ffe(1),fe,E_fe,tau_fe, t(nJ+1))
                 firstterm = (2*bulkk(1,nN)*dt(nJ)/(rho(1)*bulkc*(dr(nN)**2)))*(temp(nJ,nN+1)-temp(nJ,nN-1))
@@ -73,10 +76,10 @@ contains
                 thirdterm = temp(nJ,nN)+((dt(nJ)/bulkc)*q)
                 temp(nJ+1,nN) = firstterm+secondterm+thirdterm
                 temp(nJ+1,1)=temp(nJ+1,2)
-
-               
+                print*,thirdterm
+                ! print*,temp(nJ+1,1)               
             enddo
-            do i = 1,5
+            do i = 1,15
                 do L = 1,5
                      Hsil(L,i)=Hsil(L,i)-bulkc*(temp(nJ+1,nN)-M(1,L))
                      Hconj(L,i)=Hconj(L,i)-bulkc*(temp(nJ+1,nN)-M(4,L))
@@ -84,11 +87,19 @@ contains
                 Hmet(1,i)=Hmet(1,i)-bulkc*(temp(nJ+1,nN)-M(2,1))
                 Hsulf(1,i)=Hsulf(1,i)-bulkc*(temp(nJ+1,nN)-M(3,1))
                 
+                !Silicates reynolds algorithm to incorporate melting
+                do L =1,5
+                    th = reynolds(temp(nJ+1,nN),M(1,L),Hsil(L,i),Hin(1,L),c(1),P(1))
+                    temp(nJ+1,nN) = th(1)
+                    Hsil(L,i)=th(2)
+                enddo
+
+                !metal-only
             enddo
-            
+   
         enddo
 
-        print*,temp(5,:)
+        
         
        
         !print*,t
