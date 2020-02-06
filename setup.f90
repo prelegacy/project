@@ -48,11 +48,14 @@ module setup
                 end do
 
 
-                n = INT((60e6-2.98e6)/12000)
-                !print*, 'n =',n
+                n = INT((120e6-2.85e6)/12000)
+                ! n = INT((60e6-2.98e6)/12000)
+                print*, 'n =',n
                 allocate(t(n),dt(n))
 
-                t = (/(i,i=INT(2.98e6),INT(60e6),n)/)
+                ! t = (/(i,i=INT(2.98e6),INT(60e6),n)/) ! code version
+                ! paper version
+                t = (/(i,i=INT(2.85e6),INT(120e6),n)/)
                 do i = 1, n
                     if ( i < n ) then
                         dt(i) = t(i+1) -t(i)
@@ -64,7 +67,7 @@ module setup
 
             !Latent heat fusion for phases (Jkg^-1)
             !The order is Silicates, metal, sulfide, conjoined grains
-            Hin= reshape((/20000,252000,358000,3797,20000,0,0,4250,40000,0,0,4647,120000,0,0,9308,200000,0,0,214817/),shape(Hin)) !(/20000,20000,40000,120000,200000,252000,0,0,0,0,358000,0,0,0,0,3797,4250,4647,9308,214817/)    
+            Hin= reshape((/20000,252000,358000,37978,20000,0,0,4250,40000,0,0,4647,120000,0,0,9308,200000,0,0,214817/),shape(Hin)) !(/20000,20000,40000,120000,200000,252000,0,0,0,0,358000,0,0,0,0,3797,4250,4647,9308,214817/)    
             
             !Temperature at each melting step, in K
             !The order is Silicates, metal, sulfide, conjoined grains

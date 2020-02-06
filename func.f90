@@ -16,7 +16,7 @@ module functions
         real, intent(in):: fal, al, E_al, tau_al, ffe,fe,E_fe,tau_fe, t
         real:: heat
 
-        heat = (fal*al*E_al/tau_al)*exp(-t/tau_al)+(ffe*fe*E_fe/tau_fe)*exp(-t/tau_fe)
+        heat = ((fal*al*E_al)/tau_al)*exp(-t/tau_al)+((ffe*fe*E_fe)/tau_fe)*exp(-t/tau_fe)
 
     end function heat
 

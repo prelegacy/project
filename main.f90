@@ -21,10 +21,8 @@ implicit none
 	print*, 'hello world'
 	print*,'starting program'
 	
-	print*,'would you like to run the instantaneous Onion Shell model (Moskovitz & Gaidos 2011)? (1)'
-	print*,'or'
+	print*,'(1) Instantaneous Onion Shell model (Moskovitz & Gaidos 2011)?'
 	print*,'(2)'
-	print*,'or'
 	print*,'(3)'
 	read*,model
 	select case(model)
@@ -40,6 +38,7 @@ implicit none
 		print*,'heat eqn complete'
 		print*,'initializing output'
 		call write_output(t,r,temp)
+		
 
 	end select
 	!case(1)
