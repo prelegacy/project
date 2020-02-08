@@ -11,8 +11,8 @@ contains
 
     print*,'How would you like the output?'
 	print*,'(1) all values, plot in splash afterwards, there are ', J/100,' files to make'
-	print*,'(2) max values at each radial value'
-	print*,'(3) max values at each timestep'
+	print*,'(2) max values at each radial value and timestep'
+	! print*,'(3) max values at each timestep'
 	read*,outputfile
     select case(outputfile)
     case(1)
@@ -46,7 +46,7 @@ contains
 
         
     case(2)       
-        write(filename,"(a)")'maxoutput.dat'
+        write(filename,"(a)")'rmaxoutput.dat'
         print "(a)",' writing to '//trim(filename)
         open(newunit=iu,file=filename,status='replace',&
         action='write')
@@ -56,6 +56,17 @@ contains
         enddo
         close(iu)
 
+        write(filename,"(a)")'tmaxoutput.dat'
+        print "(a)",' writing to '//trim(filename)
+        open(newunit=iu,file=filename,status='replace',&
+        action='write')
+        write(iu,"(a)") '#  t, temp'
+        do i=1,J
+            write(iu,*) t(i),maxval(temp(i,:))
+        enddo
+        close(iu)
+
+        call execute_command_line("python3 plot.py")
     case(3)       
         write(filename,"(a)")'maxoutput.dat'
         print "(a)",' writing to '//trim(filename)
@@ -67,7 +78,7 @@ contains
         enddo
         close(iu)
 
-    ! call execute_command_line("python3 plot.py")
+     call execute_command_line("python3 plot.py")
     end select    
            
            

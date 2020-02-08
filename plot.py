@@ -10,34 +10,49 @@ def skipper(fname, linesToSkip):#skip the starting lines for np load (quicker th
                 if i > linesToSkip-1: #at least 6th line pleae
                     yield line  #return that row please
 
-data = np.loadtxt(skipper('maxoutput.dat',0))
+data = np.loadtxt(skipper('tmaxoutput.dat',0))
+dataa = np.loadtxt(skipper('rmaxoutput.dat',0))
+r = dataa[:,0]
+temp = dataa[:,1]
+t = data[:,0]
+tempt = data[:,1]
 
-r = data[:,0]
-temp = data[:,1]
+# print('What plot would you like to make?')
+# print('(1) Temp vs Radius')
+# print('(2) Temp vs Time')
+# val = input()
 
-print('What plot would you like to make?')
-print('(1) Temp vs Radius')
-print('(2) Temp vs Time')
-val = input()
 
-if val == str(1):
-    plt.figure()
-    plt.plot(r,temp)
-    plt.title('Temp of planetesimal over radius')
-    plt.xlabel('Radius (M)')
-    plt.ylabel('Temp (K)')
-    plt.show()
+plt.figure()
+plt.plot(r,temp)
+plt.title('Temp of planetesimal over time')
+plt.xlabel('Time (Myr)')
+plt.ylabel('Temp (K)')
+plt.show()
+plt.figure()
+plt.plot(r,temp)
+plt.title('Temp of planetesimal over radius')
+plt.xlabel('Radius (M)')
+plt.ylabel('Temp (K)')
+plt.show()
+# if val == str(1):
+#     plt.figure()
+#     plt.plot(r,temp)
+#     plt.title('Temp of planetesimal over radius')
+#     plt.xlabel('Radius (M)')
+#     plt.ylabel('Temp (K)')
+#     plt.show()
 
-elif val == str(2):
-    plt.figure()
-    plt.plot(r,temp)
-    plt.title('Temp of planetesimal over time')
-    plt.xlabel('Time (Myr)')
-    plt.ylabel('Temp (K)')
-    plt.show()
+# elif val == str(2):
+#     plt.figure()
+#     plt.plot(r,temp)
+#     plt.title('Temp of planetesimal over time')
+#     plt.xlabel('Time (Myr)')
+#     plt.ylabel('Temp (K)')
+#     plt.show()
 
-else:
-    print('invalid input')
+# else:
+#     print('invalid input')
 #plt.savefig('TotalKeVsTime- vs')
 
 

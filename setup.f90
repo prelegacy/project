@@ -48,7 +48,7 @@ module setup
             end do
 
 
-            endtime = 500e6!500e6
+            endtime = 60e6!500e6
             starttime = 2.85e6
             !original values are endtime = 240e6, 12000
             n = INT((endtime-starttime)/((dr(1)**2)*stab))
@@ -77,7 +77,7 @@ module setup
 
             !Latent heat fusion for phases (Jkg^-1)
             !The order is Silicates, metal, sulfide, conjoined grains
-            Hin= reshape((/20000,252000,358000,37978,20000,0,0,4250,40000,0,0,4647,120000,0,0,9308,200000,0,0,214817/),shape(Hin)) !(/20000,20000,40000,120000,200000,252000,0,0,0,0,358000,0,0,0,0,3797,4250,4647,9308,214817/)    
+            Hin= reshape((/20000,252000,358000,3797,20000,0,0,4250,40000,0,0,4647,120000,0,0,9308,200000,0,0,214817/),shape(Hin)) !(/20000,20000,40000,120000,200000,252000,0,0,0,0,358000,0,0,0,0,3797,4250,4647,9308,214817/)    
             
             !Temperature at each melting step, in K
             !The order is Silicates, metal, sulfide, conjoined grains
