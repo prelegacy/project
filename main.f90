@@ -39,7 +39,7 @@ implicit none
 			,rho,M)
 			print*,'heat eqn complete'
 			print*,'initializing output'
-			call write_output(t,r,temp)
+			call write_output(t,r,temp,dt)
 		endif
 		
 
