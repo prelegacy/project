@@ -8,7 +8,7 @@ use output
 implicit none
 	real, allocatable, dimension(:) :: k, rho, fal, ffe,c,a,r,t,dt,dr,P
 	real, allocatable, dimension(:,:)::Hin,M,temp,Hsil,Hmet,Hsulf,Hconj,bulkk
-	real :: al_ab, fe_ab,tau_al, tau_fe, E_al, E_fe, al, fe,trial,init,bdry,q
+	real :: al_ab, fe_ab,tau_al, tau_fe, E_al, E_fe, al, fe,trial,init,bdry,q,stab
 	!integer :: n, ng, ntotal,nfile 
 	!real :: t
 	integer :: model, i
@@ -29,15 +29,18 @@ implicit none
 	case(1)
 		print*, 'starting setup'
 		call setupinitial(k, rho, c, fal, ffe, al_ab, fe_ab, tau_al, tau_fe, E_al, E_fe,r,t,dt,dr,al,fe,P,init,bdry,Hin,M)
-		
-		
-		print*,'setup complete'
-		print*,'initializing heat equation'
-		call heateqn(temp,r,t,dr,dt,init,bdry,Hin,Hsil,Hmet,Hsulf,Hconj,P,c,k,bulkk,q,fal, al, E_al, tau_al, ffe,fe,E_fe,tau_fe &
-		,rho,M)
-		print*,'heat eqn complete'
-		print*,'initializing output'
-		call write_output(t,r,temp)
+		stab =stability(dt(1),dr(1))
+		if (stab <=0.01) then
+			print*,'setup complete'
+			print*,'dr and dt values are ', dr(1),dt(1)
+			print*,'with a stability value of ',stab
+			print*,'initializing heat equation'
+			call heateqn(temp,r,t,dr,dt,init,bdry,Hin,Hsil,Hmet,Hsulf,Hconj,P,c,k,bulkk,q,fal, al, E_al, tau_al, ffe,fe,E_fe,tau_fe &
+			,rho,M)
+			print*,'heat eqn complete'
+			print*,'initializing output'
+			call write_output(t,r,temp)
+		endif
 		
 
 	end select

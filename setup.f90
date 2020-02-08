@@ -6,9 +6,9 @@ module setup
         real,allocatable,dimension(:,:),intent(out)::Hin, M
         ! integer, intent(out) :: n, ntotal
         real, intent(out) :: al_ab, fe_ab,tau_al, tau_fe, E_al, E_fe,al,fe,init,bdry
-        integer :: i,n
+        integer :: i,n, endtime, starttime
         !real :: xmin, xmax, space, gamma
-        real, parameter::  pi=4*atan(1.)
+        real, parameter::  pi=4*atan(1.), stab = 0.01
 
         !allocate arrays for our values
        ! print*, 'allocating arrays of size 3, (1) normal condrite, (2) regolith, (3) post melt condrite'
@@ -35,35 +35,45 @@ module setup
             P =(/0.76,0.05,0.03,0.16/)
 
 
-                n = (100e3)/500
-                allocate(r(n),dr(n))
-                    r= (/(i,i=0,INT(100e3),500)/)
-                do i = 1, n
-                    if ( i < n ) then
-                        dr(i) = r(i+1) -r(i)
-                    else if (i == n) then
-                        dr(i)= r(i) - r(i-1)
-                    end if                
+            n = (100e3)/500
+            allocate(r(n),dr(n))
+                r= (/(i,i=0,INT(100e3),500)/)
+            do i = 1, n
+                if ( i < n ) then
+                    dr(i) = r(i+1) -r(i)
+                else if (i == n) then
+                    dr(i)= r(i) - r(i-1)
+                end if                
+                
+            end do
+
+
+            endtime = 500e6!500e6
+            starttime = 2.85e6
+            !original values are endtime = 240e6, 12000
+            n = INT((endtime-starttime)/((dr(1)**2)*stab))
+            !n = INT((endtime-2.85e6)/(12000))
+            print*,'n =',n
+            ! n = INT((60e6-2.98e6)/12000)
+            ! print*, 'n =',n
+            allocate(t(n),dt(n))
+            print*,Size(t),Size(dt)
+
+            ! t = (/(i,i=INT(2.98e6),INT(60e6),n)/) ! code version
+            ! paper version
+
+            ! t = (/(i,i=INT(2.85e6),INT(endtime),12000)/)
+            t = (/(i,i=INT(starttime),INT(endtime),(INT(endtime)-INT(starttime))/(n))/)
+            print*,Size(t),Size(dt)
+            do i = 1, SIZE(dt)
+                if ( i < SIZE(dt) ) then
+                    dt(i) = t(i+1) -t(i)
                     
-                end do
-
-
-                n = INT((120e6-2.85e6)/12000)
-                ! n = INT((60e6-2.98e6)/12000)
-                print*, 'n =',n
-                allocate(t(n),dt(n))
-
-                ! t = (/(i,i=INT(2.98e6),INT(60e6),n)/) ! code version
-                ! paper version
-                t = (/(i,i=INT(2.85e6),INT(120e6),n)/)
-                do i = 1, n
-                    if ( i < n ) then
-                        dt(i) = t(i+1) -t(i)
-                    else if (i == n) then
-                        dt(i)= t(i) - t(i-1)
-                    end if  
-                   
-                end do
+                else if (i == SIZE(dt)) then
+                    dt(i)= t(i) - t(i-1)
+                end if  
+                
+            end do
 
             !Latent heat fusion for phases (Jkg^-1)
             !The order is Silicates, metal, sulfide, conjoined grains

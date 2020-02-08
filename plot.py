@@ -15,14 +15,29 @@ data = np.loadtxt(skipper('maxoutput.dat',0))
 r = data[:,0]
 temp = data[:,1]
 
+print('What plot would you like to make?')
+print('(1) Temp vs Radius')
+print('(2) Temp vs Time')
+val = input()
 
-print(r[-1])
-plt.figure()
-plt.plot(r,temp)
-plt.title('Temp of planetesimal over radius')
-plt.xlabel('Radius (M)')
-plt.ylabel('Temp (K)')
-plt.show()
+if val == str(1):
+    plt.figure()
+    plt.plot(r,temp)
+    plt.title('Temp of planetesimal over radius')
+    plt.xlabel('Radius (M)')
+    plt.ylabel('Temp (K)')
+    plt.show()
+
+elif val == str(2):
+    plt.figure()
+    plt.plot(r,temp)
+    plt.title('Temp of planetesimal over time')
+    plt.xlabel('Time (Myr)')
+    plt.ylabel('Temp (K)')
+    plt.show()
+
+else:
+    print('invalid input')
 #plt.savefig('TotalKeVsTime- vs')
 
 

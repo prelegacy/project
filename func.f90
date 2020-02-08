@@ -8,6 +8,12 @@ module functions
         real:: stability
         
         stability = dt/(dr**2)
+
+        if ( stability > 0.01 ) then
+            print*,'The results will be unstable'
+            print*,'Stability needs to be <0.01'
+            print*,'current stability value is', stability
+        end if
         
     end function stability
 
