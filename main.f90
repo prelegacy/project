@@ -11,7 +11,7 @@ implicit none
 	real :: al_ab, fe_ab,tau_al, tau_fe, E_al, E_fe, al, fe,trial,init,bdry,q,stab
 	!integer :: n, ng, ntotal,nfile 
 	!real :: t
-	integer :: model, i
+	integer :: model, i,melting
 
 	!original value for our output file
 	!nfile = 0
@@ -28,7 +28,7 @@ implicit none
 	select case(model)
 	case(1)
 		print*, 'starting setup'
-		call setupinitial(k, rho, c, fal, ffe, al_ab, fe_ab, tau_al, tau_fe, E_al, E_fe,r,t,dt,dr,al,fe,P,init,bdry,Hin,M)
+		call setupinitial(k, rho, c, fal, ffe, al_ab, fe_ab, tau_al, tau_fe, E_al, E_fe,r,t,dt,dr,al,fe,P,init,bdry,Hin,M,melting)
 		stab =stability(dt(1),dr(1))
 		if (stab <=0.01) then
 			print*,'setup complete'
@@ -40,7 +40,7 @@ implicit none
 			,rho,M)
 			print*,'heat eqn complete'
 			print*,'initializing output'
-			call write_output(t,r,temp,dt)
+			call write_output(t,r,temp,dt,melting)
 		endif
 		
 

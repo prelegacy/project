@@ -1,13 +1,13 @@
 module setup 
     implicit none
     contains
-    subroutine setupinitial(k, rho, c, fal, ffe, al_ab, fe_ab, tau_al, tau_fe, E_al, E_fe,r,t,dt,dr,al,fe,P,init,bdry,Hin,M)
+    subroutine setupinitial(k, rho, c, fal, ffe, al_ab, fe_ab, tau_al, tau_fe, E_al, E_fe,r,t,dt,dr,al,fe,P,init,bdry,Hin,M,melting)
         real, allocatable, dimension(:), intent(out) :: k, rho, fal, ffe,c ,r,t,dt,dr,P
         real,allocatable,dimension(:,:),intent(out)::Hin, M
         ! integer, intent(out) :: n, ntotal
         real, intent(out) :: al_ab, fe_ab,tau_al, tau_fe, E_al, E_fe,al,fe,init,bdry
         integer :: i,n, endtime, starttime
-        real:: melting
+        integer,intent(out):: melting
         real, parameter::  pi=4*atan(1.), stab = 0.01
 
         !allocate arrays for our values
@@ -37,7 +37,7 @@ module setup
 
         !print*,'allocating specific heat capacities, c'
         !note specific heat capacities array is set up as (1) silicates, (2) metals, (3) sulfide, (4) conjoined grains
-        c = (/892,598,699,616/)
+        
 
         !print*,'allocating weight fraction of chondrite phases, P'
         !silicates, metal, sulfide, conjoined grains
@@ -58,7 +58,16 @@ module setup
         
 
         endtime = 120e6!500e6
-        starttime = 2.98e6
+        select case(melting)
+        case(1) !regular case
+            starttime = 2.98e6
+        case(2) !tacc for no metal sulfide 
+            starttime = 2.353e6
+        case(3) !No conjoined melting
+            M = reshape((/1353,1809,1463,2000,1393,0,0,2000,1483,0,0,2001,1753,0,0,2002,1913,0,0,2003/),shape(M))
+        case(4) !Alt C values
+            c = (/892.93,598.21,698.89,790.64/)
+        end select
         !original values are endtime = 240e6, 12000
         n = INT((endtime-starttime)/((dr(1)**2)*stab))
         !n = INT((endtime-2.85e6)/(12000))
@@ -70,7 +79,11 @@ module setup
 
         ! t = (/(i,i=INT(2.98e6),INT(60e6),n)/) ! code version
         ! paper version
-
+        if (melting == 2) then
+            !do nothing
+        else
+            starttime = 2.98e6
+        endif
         ! t = (/(i,i=INT(2.85e6),INT(endtime),12000)/)
         t = (/(i,i=INT(starttime),INT(endtime),(INT(endtime)-INT(starttime))/(n))/)
         print*,Size(t),Size(dt)
@@ -90,9 +103,18 @@ module setup
         
         !Temperature at each melting step, in K
         !The order is Silicates, metal, sulfide, conjoined grains
-        M = reshape((/1353,1809,1463,1236,1393,0,0,1400,1483,0,0,1500,1753,0,0,1600,1913,0,0,1702/),shape(M))
+        if (melting ==3) then
+            !do nothing
+        else 
+            M = reshape((/1353,1809,1463,1236,1393,0,0,1400,1483,0,0,1500,1753,0,0,1600,1913,0,0,1702/),shape(M))
+        endif
         ! M = reshape((/1353,1809,1463,2000,1393,0,0,2000,1483,0,0,2001,1753,0,0,2002,1913,0,0,2003/),shape(M))
-
+        
+        if (melting ==4) then
+            !do nothing
+        else
+            c = (/892,598,699,616/)
+        endif
         !abundance of Al in kg
         al_ab = 2.53e23
         !abundance of Fe in kg

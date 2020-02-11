@@ -71,18 +71,14 @@ contains
         do nJ = 1,J-1
             ! print*,'timestep ',nJ
             do nN = 2,N-1
-            
-                ! stab = stability(dt(1),dr(1)) 
-                ! print*,'dt =',dt(1),'dr =',dr(1)
-                ! print*,'stab =', stab
-                ! print*,'Spacestep ',nN
+
                 q = heat(fal(1), al, E_al, tau_al, ffe(1),fe,E_fe,tau_fe, t(nJ+1))
                 
                 factor = dt(1)/(rho(1)*bulkc*dr(1)**2)
 
                 firstterm = (2*(bulkk(1,nN)*factor)/nN)*(temp(nJ,nN+1)-temp(nJ,nN-1))
-               
-                secondterm =  ((bulkk(1,nN)*factor))*(temp(nJ,nN+1)-(2*temp(nJ,nN))+temp(nJ,nN-1))
+
+                secondterm =  ((bulkk(1,nN)*factor)/nN)*(temp(nJ,nN+1)-(2*temp(nJ,nN))+temp(nJ,nN-1))
 
                 thirdterm = temp(nJ,nN)+((dt(1)/bulkc)*q)
 

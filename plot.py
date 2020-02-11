@@ -25,15 +25,18 @@ tempt = data[:,1]
 
 plt.figure()
 plt.plot(r,temp)
-plt.title('Temp of planetesimal over time')
+plt.title('Temp of planetesimal over time - regular case')
 plt.xlabel('Time (Myr)')
 plt.ylabel('Temp (K)')
+plt.savefig('Temp of planetesimal over time - regular case.png')
 plt.show()
 plt.figure()
+
 plt.plot(r,temp)
-plt.title('Temp of planetesimal over radius')
+plt.title('Temp of planetesimal over radius - regular case')
 plt.xlabel('Radius (M)')
 plt.ylabel('Temp (K)')
+plt.savefig('Temp of planetesimal over radius - regular case.png')
 plt.show()
 # if val == str(1):
 #     plt.figure()

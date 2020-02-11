@@ -18,4 +18,5 @@ main.o: setup.o func.o heateq.o output.o
 heateq.o: func.o setup.o
 
 clean:
-	rm main *.o *.mod *.dat *.png *.txt 
+	rm main *.o *.mod  *.txt *.dat
+
