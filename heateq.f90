@@ -139,4 +139,67 @@ contains
         
         enddo
     end subroutine heateqn
+    
+    subroutine heateqn_a(Z,rad,rvals,tac,tvals,tfin,tstep_fin,tstep_dur)
+        integer,intent(in):: Z,tstep_fin,tstep_dur
+        real, allocatable,dimension(:,:), intent(out):: rad,tac
+        real,dimension(:),intent(in)::rvals,tvals
+        real,intent(in):: tfin
+        integer ::nz, zval,i,nn,iu,j
+        character(len=25) :: filename
+        allocate(rad(Z,INT(rvals(Z)/1000+1)))
+        allocate(tac(Z,tstep_fin))
+        
+        !For all accretion steps
+        do nz =1,Z
+            zval = nz
+            print*,'rval =', rvals(nz)
+            !Space steps for this accretion step - set up to check for stability
+            do nn = 1,INT(rvals(nz)/1000)+1
+                rad(nz,nn)= nn*1000 -1000
+            enddo
+            !if accreiton is finished, time steps go out to tfin (Myr)
+            if (nz == Z) then
+                do nn = 1,tstep_fin
+                    tac(Z,nn) = INT(tvals(z))+INT(((tfin-tvals(z))/tstep_fin)*nn)
+                enddo
+            !If accretion is continuing, time steps go between accretion step and next
+            else 
+                do nn = 1, tstep_dur
+                    tac(nz,nn) = tvals(nz)+INT((tvals(nz+1)-tvals(nz)*nn))
+                enddo
+            endif
+            
+
+        enddo
+        
+
+
+        !check to see if the output is correct
+        ! write(filename,"(a)")'routput.dat'
+        ! print "(a)",' writing to '//trim(filename)
+        ! open(newunit=iu,file=filename,status='replace',&
+        ! action='write')
+        ! write(iu,"(a)") '#  r'
+        ! do i=1,SIZE(rad(1,:))
+        !         write(iu,fmt='(50F9.2)') rad(:,i) 
+        ! enddo
+        ! close(iu)
+       
+        ! do nz =1,Z
+        !     zval = nz
+
+        !     !Space steps for this accretion step - set up to check for stability
+        !     allocate(r(INT(rvals(nz)/1000)+1))
+        !     r = (/(i,i=0,INT(rvals(nz)), 1000)/)
+
+        !     !if accreiton is finished, time steps go out to tfin (Myr)
+        !     if (nz == Z) then
+        !         t = 
+        !     endif
+        !     deallocate(r)
+
+        ! enddo
+
+    end subroutine heateqn_a
 end module heateq

@@ -138,7 +138,108 @@ module setup
 
 
     end subroutine setupinitial
+    
+    subroutine gradinitial(k,reg,rho,c,P,init,bdry,Hstart,Hstart_imp,M,Z,final_rad,rvals, rstep_tot,t_acc,t_dur,tfin,tvals &
+        ,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time)
+        real,allocatable,dimension(:),intent(out):: k,rho, c,P,Hstart_imp,rvals,tvals
+        real,allocatable,dimension(:,:),intent(out):: Hstart,M,N,J,temps_time
+        integer, intent(out):: reg,Z,rstep_tot,tstep_dur,tstep_fin,tstep_tot
+        real, intent(out):: init, bdry,final_rad,t_acc,t_dur,tfin
+        integer :: i
+        ! real,intent(out):: rho
+
+        print*,'gradinitial online'
+
+        !Thermal conductivity in J/(yr*m*K)
+        allocate(k(3))
+        k = (/3.2e7,3.2e7,12.6e7/)
         
+        !Regolith thickness (in number of radial space steps)
+        reg = 2
+
+        !Average bulk density of chondrite, previous setup allocated 3 values, but only one was used anyway
+        allocate(rho(3))
+        rho = (/3440,0,0/)
+
+        !Specific heat capacities [silicates, metal, sulfide, conjoined grains]
+        c = (/892,598,699,616/)
+
+        !Weight fraction of phases in chondrite [silicates, metal, sulfide, conjoined grains]
+        P = (/0.76,0.05,0.03,0.16/)
+
+        !Initial temperature throughout asteroid and initial temperature of newly accreting material
+        init = 180
+
+        !External temperature throughout time
+        bdry = 180
+
+        !Latent heat of fusion for phases in J kg^-1, in steps
+        !Each step is Htot value multiplied by the percentage of the phase that melts
+        allocate(Hstart(4,5))
+        Hstart=reshape((/20000,252000,358000,136282,20000,0,0,23313,40000,0,0,27815,120000,0,0,65331,300000,0,0,52260/),&
+        shape(Hstart))
+
+        !Latent heat of fusion, differnt format of Hstart to setup Hin values
+        allocate(Hstart_imp(20))
+        Hstart_imp=(/20000,20000,40000,120000,200000,252000,358000,136282,23313,27815,65331,52260/)
+
+        !Temperature (K) at each melting step
+        allocate(M(4,5))
+        M = reshape((/1353,1809,1463,1236,1393,0,0,1400,1483,0,0,1500,1753,0,0,1600,1913,0,0,1702/),shape(M))
+
+        !Set up accretion conditions
+        !----------------------------------
+        !# of accretion steps
+        Z = 50
+        
+        !FInal radius
+        final_rad = 100e3
+        !----------------------------------
+
+        !Values of radius (m) at each accretion step
+        allocate(rvals(INT(z)))
+        rvals = (/(i,i=INT(final_rad/z),INT(final_rad),INT(final_rad/z))/)
+       
+        !Final number of space steps once radius is at full size
+        rstep_tot = INT(final_rad/(1e3))+1
+       
+        !Inputs
+        !Accretion time (Myr after CAIs)
+        t_acc = 2.55e6
+
+        !Accretion duration (Myr)
+        t_dur = 0.35e6
+
+        !Final time (MYR after cais) to compute temp out to
+        tfin = 40e6
+
+        !Values of time (yr) at each accretion step
+        allocate(tvals(INT(z)))
+        tvals = (/(i,i=INT(t_acc),INT(t_acc+t_dur),INT((t_dur)/Z))/)
+        
+        !Number of timesteps used between accretion steps
+        tstep_dur = 201
+
+        !# of timesteps used after accretion finishes
+        tstep_fin = INT(tfin/1e4)+1
+        
+        !Space steps at each accretion step
+        allocate(N(1,Z))
+     
+        !Time steps at each accretion step
+        allocate(J(1,Z))
+
+        !Total number of time steps used
+        tstep_tot = tstep_dur*z +tstep_fin
+        
+        !Creates matrix that tracks timestep in column 1 and temperatures for remaining radial positions
+        allocate(temps_time(tstep_tot,rstep_tot+1))
+        
+    
+
+
+
+    end subroutine gradinitial
         
     end module setup
     
