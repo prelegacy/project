@@ -140,12 +140,12 @@ contains
         enddo
     end subroutine heateqn
     
-    subroutine heateqn_a(Z,rad,rvals,tac,tvals,tfin,tstep_fin,tstep_dur)
+    subroutine heateqn_a(Z,rad,rvals,tac,tvals,tfin,tstep_fin,tstep_dur,delt,delx)
         integer,intent(in):: Z,tstep_fin,tstep_dur
-        real, allocatable,dimension(:,:), intent(out):: rad,tac
+        real, allocatable,dimension(:,:), intent(out):: rad,tac,delt,delx
         real,dimension(:),intent(in)::rvals,tvals
         real,intent(in):: tfin
-        integer ::nz, zval,i,nn,iu,j
+        integer ::nz, zval,i,nN,iu,nJ,j
         character(len=25) :: filename
         allocate(rad(Z,INT(rvals(Z)/1000+1)))
         allocate(tac(Z,tstep_fin))
@@ -153,7 +153,7 @@ contains
         !For all accretion steps
         do nz =1,Z
             zval = nz
-            print*,'rval =', rvals(nz)
+           
             !Space steps for this accretion step - set up to check for stability
             do nn = 1,INT(rvals(nz)/1000)+1
                 rad(nz,nn)= nn*1000 -1000
@@ -166,17 +166,63 @@ contains
             !If accretion is continuing, time steps go between accretion step and next
             else 
                 do nn = 1, tstep_dur
-                    tac(nz,nn) = tvals(nz)+INT((tvals(nz+1)-tvals(nz)*nn))
+                    tac(nz,nn) = tvals(nz)+INT((tvals(nz+1)-tvals(nz))*nn)
                 enddo
             endif
-            
 
         enddo
         
+        !Set length of accretion steps in time and space
+        nN = 50
+        nJ = 50 
+
+        !FInd dt and dx values 
+        allocate(delx(Z,INT(rvals(Z)/1000+1)))
+        allocate(delt(Z,tstep_fin))
+        
+        do i = 1, SIZE(rad(:,1))
+            do j = 1,SIZE(rad(1,:))-1
+                !Sets the term to 0 instead of giving a negative difference in the term
+                if (rad(i,j+1) ==0) then
+                    delx(i,j) = 0 
+                else
+                delx(i,j) = rad(i,j+1) - rad(i,j)
+                endif
+            enddo
+        enddo
+        
+        do i = 1, SIZE(tac(:,1))
+            do j = 1,SIZE(tac(1,:))-1
+                print*,'i =',i,'j =', j
+                if (tac(i,j+1) ==0) then
+                    delt(i,j) = 0 
+                else
+                    delt(i,j) = tac(i,j+1) - tac(i,j)
+                endif
+            enddo
+        enddo
 
 
-        !check to see if the output is correct
-        ! write(filename,"(a)")'routput.dat'
+        print*,(SUM(delx)/SIZE(delx))*2
+        print*,(SUM(delt)/SIZE(delt))*2
+        print*, MAXVAL(delt), MINVAL(delt)
+
+        !   write(filename,"(a)")'deltoutput.dat'
+        ! print "(a)",' writing to '//trim(filename)
+        ! open(newunit=iu,file=filename,status='replace',&
+        ! action='write')
+        ! write(iu,"(a)") '#  t'
+        ! do i=1,SIZE(delx(1,:))
+        !         write(iu,fmt='(50F9.2)') delt(:,i) 
+        ! enddo
+        ! close(iu)
+
+
+
+
+
+        ! !check to see if the output is correct
+        ! ! write(filename,"(a)")'routput.dat'
         ! print "(a)",' writing to '//trim(filename)
         ! open(newunit=iu,file=filename,status='replace',&
         ! action='write')
@@ -186,6 +232,20 @@ contains
         ! enddo
         ! close(iu)
        
+        ! print*,'size =', SIZE(tac(:,1))
+        ! write(filename,"(a)")'toutput.dat'
+        ! print "(a)",' writing to '//trim(filename)
+        ! open(newunit=iu,file=filename,status='replace',&
+        ! action='write')
+        ! write(iu,"(a)") '#  t'
+        ! do i=1,SIZE(tac(:,1))
+        !         write(iu,fmt='(50F10.0)') tac(:,i) 
+        ! enddo
+        ! close(iu)
+
+
+
+
         ! do nz =1,Z
         !     zval = nz
 

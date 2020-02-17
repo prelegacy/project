@@ -7,7 +7,7 @@ use heateq
 use output
 implicit none
 	real, allocatable, dimension(:) :: k, rho, fal, ffe,c,a,r,t,dt,dr,P,Hstart_imp,rvals,tvals
-	real, allocatable, dimension(:,:)::Hin,M,temp,Hsil,Hmet,Hsulf,Hconj,bulkk,Hstart,N,J,temps_time,rad,tac
+	real, allocatable, dimension(:,:)::Hin,M,temp,Hsil,Hmet,Hsulf,Hconj,bulkk,Hstart,N,J,temps_time,rad,tac,delt,delx
 	real :: al_ab, fe_ab,tau_al, tau_fe, E_al, E_fe, al, fe,trial,init,bdry,q,stab,final_rad,t_acc,t_dur,tfin
 	!integer :: n, ng, ntotal,nfile 
 	!real :: t
@@ -46,7 +46,7 @@ implicit none
 	case(2)
 		call gradinitial(k,reg,rho,c,P,init,bdry,Hstart,Hstart_imp,M,Z,final_rad,rvals, rstep_tot,t_acc,t_dur,tfin,tvals &
 		,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time)
-		call  heateqn_a(Z,rad,rvals,tac,tvals,tfin,tstep_fin,tstep_dur)
+		call  heateqn_a(Z,rad,rvals,tac,tvals,tfin,tstep_fin,tstep_dur,delt,delx)
 	end select
 	
 end program main
