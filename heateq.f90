@@ -145,6 +145,7 @@ contains
         real, allocatable,dimension(:,:), intent(out):: rad,tac,delt,delx
         real,dimension(:),intent(in)::rvals,tvals
         real,intent(in):: tfin
+        real :: stab1, stab2
         integer ::nz, zval,i,nN,iu,nJ,j
         character(len=25) :: filename
         allocate(rad(Z,INT(rvals(Z)/1000+1)))
@@ -193,7 +194,6 @@ contains
         
         do i = 1, SIZE(tac(:,1))
             do j = 1,SIZE(tac(1,:))-1
-                print*,'i =',i,'j =', j
                 if (tac(i,j+1) ==0) then
                     delt(i,j) = 0 
                 else
@@ -203,23 +203,32 @@ contains
         enddo
 
 
+     
+
+        write(filename,"(a)")'toutput.dat'
+        print "(a)",' writing to '//trim(filename)
+        open(newunit=iu,file=filename,status='replace',&
+        action='write')
+        write(iu,"(a)") '#  t'
+        do i=1,SIZE(tac(:,1))
+                write(iu,fmt='(4001F15.2)') tac(i,:) 
+        enddo
+        close(iu)
+
         print*,(SUM(delx)/SIZE(delx))*2
         print*,(SUM(delt)/SIZE(delt))*2
         print*, MAXVAL(delt), MINVAL(delt)
+        print*,SHAPE(delt)
 
-        !   write(filename,"(a)")'deltoutput.dat'
-        ! print "(a)",' writing to '//trim(filename)
-        ! open(newunit=iu,file=filename,status='replace',&
-        ! action='write')
-        ! write(iu,"(a)") '#  t'
-        ! do i=1,SIZE(delx(1,:))
-        !         write(iu,fmt='(50F9.2)') delt(:,i) 
-        ! enddo
-        ! close(iu)
+        stab1 = stability(MAXVAL(delt),MAXVAL(delx)) 
+        print*, stab1
+        stab2 = stability(MAXVAL(delt),(SUM(delx)/SIZE(delx))*2) 
+        print*, stab2
 
-
-
-
+        !Only continue on if stab1 and stab2 are less than 0.01
+        if (stab1 < 0.01 .and. stab2 < 0.01) then
+            
+        endif
 
         ! !check to see if the output is correct
         ! ! write(filename,"(a)")'routput.dat'
