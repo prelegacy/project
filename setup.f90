@@ -140,12 +140,13 @@ module setup
     end subroutine setupinitial
     
     subroutine gradinitial(k,reg,rho,c,P,init,bdry,Hstart,Hstart_imp,M,Z,final_rad,rvals, rstep_tot,t_acc,t_dur,tfin,tvals &
-        ,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time)
+        ,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time,rad,tac,delt,delx)
         real,allocatable,dimension(:),intent(out):: k,rho, c,P,Hstart_imp,rvals,tvals
-        real,allocatable,dimension(:,:),intent(out):: Hstart,M,N,J,temps_time
+        real,allocatable,dimension(:,:),intent(out):: Hstart,M,N,J,temps_time,rad,tac,delt,delx
         integer, intent(out):: reg,Z,rstep_tot,tstep_dur,tstep_fin,tstep_tot
         real, intent(out):: init, bdry,final_rad,t_acc,t_dur,tfin
-        integer :: i
+        integer ::nz, zval,i,nN,iu,nJ
+        character(len=25) :: filename
         ! real,intent(out):: rho
 
         print*,'gradinitial online'
@@ -235,7 +236,76 @@ module setup
         !Creates matrix that tracks timestep in column 1 and temperatures for remaining radial positions
         allocate(temps_time(tstep_tot,rstep_tot+1))
         
-    
+        !Create a matrix to hold the values of rad and tac
+        allocate(rad(Z,INT(rvals(Z)/1000+1)))
+        allocate(tac(Z,tstep_fin))
+        
+        !For all accretion steps
+        do nz =1,Z
+            zval = nz
+           
+            !Space steps for this accretion step - set up to check for stability
+            do nn = 1,INT(rvals(nz)/1000)+1
+                rad(nz,nn)= nn*1000 -1000
+            enddo
+            !if accreiton is finished, time steps go out to tfin (Myr)
+            if (nz == Z) then
+                do nn = 1,tstep_fin
+                    tac(Z,nn) = INT(tvals(z))+INT(((tfin-tvals(z))/tstep_fin)*nn)
+                enddo
+            !If accretion is continuing, time steps go between accretion step and next
+            else 
+                do nn = 1, tstep_dur
+                    tac(nz,nn) = tvals(nz)+INT((tvals(nz+1)-tvals(nz))*nn)
+                enddo
+            endif
+
+        enddo
+        
+        !Set length of accretion steps in time and space
+        nN = 50
+        nJ = 50 
+
+        !Find dt and dx values 
+        allocate(delx(Z,INT(rvals(Z)/1000+1)))
+        allocate(delt(Z,tstep_fin))
+        
+        do i = 1, SIZE(rad(:,1))
+            do nj = 1,SIZE(rad(1,:))-1
+                !Sets the term to 0 instead of giving a negative difference in the term
+                if (rad(i,nj+1) ==0) then
+                    delx(i,nj) = 0 
+                else
+                    !Find the difference in between each step
+                    delx(i,nj) = rad(i,nj+1) - rad(i,nj)
+                endif
+            enddo
+        enddo
+        
+        do i = 1, SIZE(tac(:,1))
+            do nj = 1,SIZE(tac(1,:))-1
+                if (tac(i,nj+1) ==0) then
+                    delt(i,nj) = 0 
+                else
+                    delt(i,nj) = tac(i,nj+1) - tac(i,nj)
+                endif
+            enddo
+        enddo
+
+
+     
+        !File output to check if values are being stored and can be printed correctly
+        ! write(filename,"(a)")'routput.dat'
+        ! print "(a)",' writing to '//trim(filename)
+        ! open(newunit=iu,file=filename,status='replace',&
+        ! action='write')
+        ! write(iu,"(a)") '#  r'
+        ! do i=1,SIZE(rad(:,1))
+        !         write(iu,fmt='(101F15.2)') rad(i,:) 
+        ! enddo
+        ! close(iu)
+
+
 
 
 

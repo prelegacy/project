@@ -8,7 +8,7 @@ use output
 implicit none
 	real, allocatable, dimension(:) :: k, rho, fal, ffe,c,a,r,t,dt,dr,P,Hstart_imp,rvals,tvals
 	real, allocatable, dimension(:,:)::Hin,M,temp,Hsil,Hmet,Hsulf,Hconj,bulkk,Hstart,N,J,temps_time,rad,tac,delt,delx
-	real :: al_ab, fe_ab,tau_al, tau_fe, E_al, E_fe, al, fe,trial,init,bdry,q,stab,final_rad,t_acc,t_dur,tfin
+	real :: al_ab, fe_ab,tau_al, tau_fe, E_al, E_fe, al, fe,trial,init,bdry,q,stab,final_rad,t_acc,t_dur,tfin,stab1, stab2
 	!integer :: n, ng, ntotal,nfile 
 	!real :: t
 	integer :: model, i,melting, reg,Z,rstep_tot,tstep_dur,tstep_fin,tstep_tot
@@ -45,8 +45,20 @@ implicit none
 		
 	case(2)
 		call gradinitial(k,reg,rho,c,P,init,bdry,Hstart,Hstart_imp,M,Z,final_rad,rvals, rstep_tot,t_acc,t_dur,tfin,tvals &
-		,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time)
-		call  heateqn_a(Z,rad,rvals,tac,tvals,tfin,tstep_fin,tstep_dur,delt,delx)
+		,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time,rad,tac,delt,delx)
+		stab1 = stability(MAXVAL(delt),MAXVAL(delx)) 
+        stab2 = stability(MAXVAL(delt),(SUM(delx)/SIZE(delx))*2) 
+        !Only continue on if stab1 and stab2 are less than 0.01
+		if (stab1 < 0.01 .and. stab2 < 0.01) then
+			print*, "Results will be stable with stability values of"
+			print*, stab1, 'and ', stab2
+			print*, "Starting heateq_a"
+		else 
+			print*,'results are not stable, try to improve your dt values'
+			call exit()
+        endif
+		call  heateqn_a(k,Z,rad,reg)
+		
 	end select
 	
 end program main
