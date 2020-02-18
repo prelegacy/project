@@ -1,5 +1,7 @@
 module setup 
+    use functions
     implicit none
+
     contains
     subroutine setupinitial(k, rho, c, fal, ffe, al_ab, fe_ab, tau_al, tau_fe, E_al, E_fe,r,t,dt,dr,al,fe,P,init,bdry,Hin,M,melting)
         real, allocatable, dimension(:), intent(out) :: k, rho, fal, ffe,c ,r,t,dt,dr,P
@@ -140,13 +142,15 @@ module setup
     end subroutine setupinitial
     
     subroutine gradinitial(k,reg,rho,c,P,init,bdry,Hstart,Hstart_imp,M,Z,final_rad,rvals, rstep_tot,t_acc,t_dur,tfin,tvals &
-        ,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time,rad,tac,delt,delx)
-        real,allocatable,dimension(:),intent(out):: k,rho, c,P,Hstart_imp,rvals,tvals
+        ,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time,rad,tac,delt,delx,delxx,tcounter,rcounter,deltt)
+        real,allocatable,dimension(:),intent(out):: k,rho, c,P,Hstart_imp,rvals,tvals,tcounter, rcounter,delxx,deltt
+        ! real(kind=8), allocatable,dimension(:),intent(out) ::
         real,allocatable,dimension(:,:),intent(out):: Hstart,M,N,J,temps_time,rad,tac,delt,delx
         integer, intent(out):: reg,Z,rstep_tot,tstep_dur,tstep_fin,tstep_tot
         real, intent(out):: init, bdry,final_rad,t_acc,t_dur,tfin
-        integer ::nz, zval,i,nN,iu,nJ
+        integer ::nz, zval,i,nN,iu,nJ,ncounter
         character(len=25) :: filename
+        real :: number, stab1,stab2
         ! real,intent(out):: rho
 
         print*,'gradinitial online'
@@ -248,7 +252,7 @@ module setup
             do nn = 1,INT(rvals(nz)/1000)+1
                 rad(nz,nn)= nn*1000 -1000
             enddo
-            !if accreiton is finished, time steps go out to tfin (Myr)
+            !if accretion is finished, time steps go out to tfin (Myr)
             if (nz == Z) then
                 do nn = 1,tstep_fin
                     tac(Z,nn) = INT(tvals(z))+INT(((tfin-tvals(z))/tstep_fin)*nn)
@@ -268,13 +272,16 @@ module setup
 
         !Find dt and dx values 
         allocate(delx(Z,INT(rvals(Z)/1000+1)))
+        allocate(delxx(Z),deltt(Z))
         allocate(delt(Z,tstep_fin))
         
         do i = 1, SIZE(rad(:,1))
             do nj = 1,SIZE(rad(1,:))-1
                 !Sets the term to 0 instead of giving a negative difference in the term
-                if (rad(i,nj+1) ==0) then
+                if (rad(i,nj) ==0) then
                     delx(i,nj) = 0 
+                else if (rad(i,nj+1) ==0 .and. rad(i,nj) /= 0) then
+                    delx(i,nj) = rad(i,nj) - rad(i,nj-1)
                 else
                     !Find the difference in between each step
                     delx(i,nj) = rad(i,nj+1) - rad(i,nj)
@@ -282,6 +289,9 @@ module setup
             enddo
         enddo
         
+        
+        
+
         do i = 1, SIZE(tac(:,1))
             do nj = 1,SIZE(tac(1,:))-1
                 if (tac(i,nj+1) ==0) then
@@ -291,20 +301,74 @@ module setup
                 endif
             enddo
         enddo
+        allocate(rcounter(SIZE(rad(:,1))),tcounter(SIZE(tac(:,1))))
+        do nz =1,Z
+            Ncounter = 0
 
-
+            !Note that the shape of the accretion time steps is uniform until accretion has ended, steps 1-49 is 202 steps, and step 50 is 4001 steps
+            do nj = 1, SIZE(tac(1,:))
+                Ncounter = Ncounter + 1
+                if (tac(nz,nj) == 0 .and. nj >1) then
+                    tcounter(nz)=Ncounter
+                    exit
+                else if (nz == Z .and. nj == SIZE(tac(1,:))) then
+                    tcounter(nz) = SIZE(tac(1,:))
+                endif 
+            enddo 
      
-        !File output to check if values are being stored and can be printed correctly
-        ! write(filename,"(a)")'routput.dat'
+    
+            !Because the total length is set to max length of final accretion step, we have to find what value the current accretion step reaches, by finding where the radius value becomes 0 after r=0
+            Ncounter = 0
+            do nj = 1, SIZE(rad(1,:))
+                Ncounter = Ncounter + 1
+                if (rad(nz,nj) == 0 .and. nj >1) then
+                    rcounter(nz)=Ncounter
+                    exit
+                else if (nz == Z .and. nj == SIZE(rad(1,:))) then
+                    rcounter(nz) = SIZE(rad(1,:))
+                    !     !Keeps counting
+                endif  
+                    
+            enddo
+        enddo
+
+        do i = 1, SIZE(delx(:,1))
+            do nj = 1, size(delx(1,:))
+                if(nj == rcounter(i)) then
+                 delxx(i) = (rcounter(i)*delx(i,2))/rcounter(i)
+                endif
+            enddo
+        enddo
+
+        do i = 1, SIZE(delt(:,1))
+            do nj = 1, size(delt(1,:))
+                if(nj == tcounter(i)) then
+                 deltt(i) = (tcounter(i)*delt(i,2))/tcounter(i)
+                endif
+            enddo
+        enddo
+
+        ! print*,delxx
+        ! number = SUM(delxx)/SIZE(delxx)
+        ! print*,number
+
+        ! print*,deltt
+        !  stab1 = stability(deltt(1),number)
+        ! stab2 = stability(deltt(50),number)
+        ! print*,stab1
+        ! print*,stab2
+
+        ! File output to check if values are being stored and can be printed correctly
+        ! write(filename,"(a)")'doutput.dat'
         ! print "(a)",' writing to '//trim(filename)
         ! open(newunit=iu,file=filename,status='replace',&
         ! action='write')
         ! write(iu,"(a)") '#  r'
-        ! do i=1,SIZE(rad(:,1))
-        !         write(iu,fmt='(101F15.2)') rad(i,:) 
+        ! do i=1,SIZE(delt(1,:))
+        !         write(iu,fmt='(50F15.2)') delt(:,i) 
         ! enddo
         ! close(iu)
-
+       
 
 
 

@@ -1,5 +1,6 @@
 module heateq
     use functions
+    use grad
     implicit none
     
 contains
@@ -140,54 +141,72 @@ contains
         enddo
     end subroutine heateqn
     
-    subroutine heateqn_a(k,Z,rad,reg)
+    subroutine heateqn_a(k,Z,rad,reg,tac)
     real,allocatable,dimension(:,:):: bulkk
-    real,dimension(:,:),intent(in):: rad
+    real,dimension(:,:),intent(inout):: rad,tac
     real, dimension(:), intent(in):: k 
     integer, intent(in):: Z,reg
-    integer,allocatable, dimension(:):: counter
+    integer,allocatable, dimension(:):: rcounter, tcounter
     integer:: nz,nj,Ncounter, i, iu
     character(len=25) :: filename
     
     !Set up k-values to be used in the program, make same length as radius, so the corresponding K-value can be used
     allocate(bulkk(SIZE(rad(:,1)),SIZE(rad(1,:))))
-    allocate(counter(SIZE(rad(:,1))))
+    allocate(rcounter(SIZE(rad(:,1))),tcounter(SIZE(tac(:,1))))
     do nz =1,Z
         Ncounter = 0
+
+
+        !Note that the shape of the accretion time steps is uniform until accretion has ended, steps 1-49 is 202 steps, and step 50 is 4001 steps
+        do nj = 1, SIZE(tac(1,:))
+            Ncounter = Ncounter + 1
+            if (tac(nz,nj) == 0 .and. nj >1) then
+                tcounter(nz)=Ncounter
+                exit
+            else if (nz == Z .and. nj == SIZE(tac(1,:))) then
+                tcounter(nz) = SIZE(tac(1,:))
+            endif 
+        enddo 
+ 
+
         !Because the total length is set to max length of final accretion step, we have to find what value the current accretion step reaches, by finding where the radius value becomes 0 after r=0
+        Ncounter = 0
         do nj = 1, SIZE(rad(1,:))
             Ncounter = Ncounter + 1
             if (rad(nz,nj) == 0 .and. nj >1) then
-                counter(nz)=Ncounter
+                rcounter(nz)=Ncounter
                 exit
-            else
+            else if (nz == Z .and. nj == SIZE(rad(1,:))) then
+                rcounter(nz) = SIZE(rad(1,:))
                 !     !Keeps counting
             endif  
-                  
+                
         enddo
         !If this is the first accretion step, set the initial thermal conductivity
         if (nz == 1) then
-            bulkk(nz,1:counter(nz)) = k(2)
-            bulkk(nz,counter(nz)+1:Z) = 0
+            bulkk(nz,1:rcounter(nz)) = k(2)
+           
         !If this is the last accretion step
         elseif ( nz == Z ) then
 
             !Set K computed for existing material
-            bulkk(nz,1:counter(nz-1)) = 5!thk(14,:)
-
+            bulkk(nz,1:rcounter(nz-1)) = 5!thk(14,:)
+            call grad_a(rcounter(nz),tcounter(nz))
             !Set K for newly accreted material
-            bulkk(nz,counter(nz-1):SIZE(bulkk(1,:)))=k(2)
-   
-            ! !Set K for regolith
-            bulkk(nz,(SIZE(bulkk(1,:))- Reg): SIZE(bulkk(1,:))) = k(1)
+            bulkk(nz,rcounter(nz-1):rcounter(nz))=k(2)
+            !Set K for regolith
+            bulkk(nz, rcounter(nz)- Reg: rcounter(nz)) = k(1)
 
+        !if accretion i scontinuing  
         else 
-
+            call grad_a(rcounter(nz),tcounter(nz))
             ! bulkk(nz,)
 
         end if   
 
     enddo
+
+    
 
     write(filename,"(a)")'koutput.dat'
     print "(a)",' writing to '//trim(filename)
