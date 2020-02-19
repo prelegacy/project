@@ -19,6 +19,8 @@ setup.o: func.o
 
 heateq.o: func.o setup.o grad.o
 
+grad.o: func.o
+
 clean:
 	rm main *.o *.mod  *.txt *.dat
 

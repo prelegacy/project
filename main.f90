@@ -62,7 +62,7 @@ implicit none
 			print*,'results are not stable, try to improve your dt values'
 			call exit()
         endif
-		! call  heateqn_a(k,Z,rad,reg,tac)
+		call  heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p)
 		
 	end select
 	

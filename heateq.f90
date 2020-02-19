@@ -141,9 +141,12 @@ contains
         enddo
     end subroutine heateqn
     
-    subroutine heateqn_a(k,Z,rad,reg,tac)
+    subroutine heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p)
     real,allocatable,dimension(:,:):: bulkk
+    real, intent(inout)::init,bdry
     real,dimension(:,:),intent(inout):: rad,tac
+    real,allocatable,dimension(:,:),intent(inout)::temp
+    real,dimension(:),intent(inout):: deltt,delxx,c,p
     real, dimension(:), intent(in):: k 
     integer, intent(in):: Z,reg
     integer,allocatable, dimension(:):: rcounter, tcounter
@@ -191,7 +194,8 @@ contains
 
             !Set K computed for existing material
             bulkk(nz,1:rcounter(nz-1)) = 5!thk(14,:)
-            call grad_a(rcounter(nz),tcounter(nz))
+            ! call grad_a(nz,rcounter(nz),tcounter(nz),delxx,deltt,temp,init,bdry)
+            
             !Set K for newly accreted material
             bulkk(nz,rcounter(nz-1):rcounter(nz))=k(2)
             !Set K for regolith
@@ -199,7 +203,7 @@ contains
 
         !if accretion i scontinuing  
         else 
-            call grad_a(rcounter(nz),tcounter(nz))
+            ! call grad_a(nz,rcounter(nz),tcounter(nz),delxx,deltt,temp,init,bdry)
             ! bulkk(nz,)
 
         end if   
@@ -208,15 +212,15 @@ contains
 
     
 
-    write(filename,"(a)")'koutput.dat'
-    print "(a)",' writing to '//trim(filename)
-    open(newunit=iu,file=filename,status='replace',&
-    action='write')
-    write(iu,"(a)") '#  k'
-    do i=1,SIZE(bulkk(1,:))
-            write(iu,fmt='(50F15.2)') bulkk(:,i) 
-    enddo
-    close(iu)
+    ! write(filename,"(a)")'koutput.dat'
+    ! print "(a)",' writing to '//trim(filename)
+    ! open(newunit=iu,file=filename,status='replace',&
+    ! action='write')
+    ! write(iu,"(a)") '#  k'
+    ! do i=1,SIZE(bulkk(1,:))
+    !         write(iu,fmt='(50F15.2)') bulkk(:,i) 
+    ! enddo
+    ! close(iu)
 
     !THK = call heat eqn grad B
     end subroutine heateqn_a
