@@ -9,10 +9,11 @@ contains
         real,intent(in)::init,bdry,t
         real,dimension(:),intent(in):: delxx,deltt,c,p
         real,dimension(:,:),intent(in)::Hin
+        real,allocatable,dimension(:)::th
         real, allocatable,dimension(:,:), intent(out):: temp
         real,allocatable,dimension(:,:)::Hsil,Hmet,Hsulf,Hconj
         real :: bulkC, fAL,fFe,Altratio,Feratio,EAl,EFe,LifeAl,LifeFe,q
-        integer :: N, J, dr, dt, i, iu,ni,nj
+        integer :: N, J, dr, dt, i, iu,ni,nj,nn,nw
         character(len=25) :: filename
 
 
@@ -79,18 +80,54 @@ contains
         
         !import t
         !For each element of q (i.e each time step), calculate the value of the heat source term
-        q = heat(fAL, Altratio, EAl, LifeAl, fFe,Feratio,EFe,LifeFe, t)
+        
 
         !for each time step
         do nJ = 1,J-1
             print*,'timestep =',nJ
             !Compute T at next time step
             do nN = 2,N-1
-                temp(nJ+1,nN) = !insert term
-
+                !Note that our bulkk k-value is a 2D array which is updated at each accretion step
+                q = heat(fAL, Altratio, EAl, LifeAl, fFe,Feratio,EFe,LifeFe, t(nJ+1))
+                temp(nJ+1,nN) = ((2*bulkk(nz,nN)*dt)/(rho(1)*bulkC*nN*(dr**2)))*(temp(nJ,nN+1)-temp(nJ,nN-1))+((bulkk(nz,nN)*dt)/ &
+                (rho(1)*bulkC*(dr**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN-1))+temp(nJ,nN)+(dt/bulkC)*q
                 !Neumann boundary conditions
                 temp(nJ+1,1) = temp(nJ+1,2)
             enddo
+
+            !Computes residual heat of fusion values 
+            do nN = 1,N 
+                do nW = 1,5
+                    Hsil(nW,nN)=Hsil(nW,nN)-bulkC*(temp(nJ+1,nN)-M(1,nW))
+                enddo
+                Hmet(1,nN)=Hmet(1,nN)-bulkC*(temp(nJ+1,nN)-M(2,1))
+                Hsulf(1,nN)=Hsulf(1,nN)-bulkC*(temp(nJ+1,nN)-M(3,1))
+                do nW= 1,5
+                    Hconj(nW,nN) = Hconj(nW,nN)-C*(temp(nJ+1,nN)-M(4,nW))
+                enddo
+
+            
+
+            !Following seciton uses an algorithm modified from Reynolds et al (1966)
+            !Incorporates melting, algorithm is a subfunction called Renolds which is presented below
+            !The output is a 1x2 matrix TH = [new temp, new residual heat of fusion]
+            !Values from TH are then assigned to temp(nj+1,nN) and Hphase(w,n)
+
+            !Silicates
+            allocate(th(2))
+
+            do nW = 1,5
+                th = reynolds(temp(nJ+1,nN),M(1,nw),Hsil(nW,nN),Hstart(1,nW),c(1),P(1))
+                temp(nJ+1,nN) = th(1)
+                Hmet(1,nN) = th(2)
+            enddo
+
+            !metals-only
+            th = reynolds(temp(nJ+1,nN),M(2,1),Hmet(1,nN),Hstart(2,1),c(2),P(2))
+            temp(nj+1,nN) = th(1)
+            Hmet(1,nN) = th(2)
+
+            enddo   
         enddo
 
          
