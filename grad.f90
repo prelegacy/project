@@ -108,28 +108,72 @@ contains
 
             
 
-            !Following seciton uses an algorithm modified from Reynolds et al (1966)
-            !Incorporates melting, algorithm is a subfunction called Renolds which is presented below
-            !The output is a 1x2 matrix TH = [new temp, new residual heat of fusion]
-            !Values from TH are then assigned to temp(nj+1,nN) and Hphase(w,n)
+                !Following seciton uses an algorithm modified from Reynolds et al (1966)
+                !Incorporates melting, algorithm is a subfunction called Renolds which is presented below
+                !The output is a 1x2 matrix TH = [new temp, new residual heat of fusion]
+                !Values from TH are then assigned to temp(nj+1,nN) and Hphase(w,n)
 
-            !Silicates
-            allocate(th(2))
+                !Silicates
+                allocate(th(2))
 
-            do nW = 1,5
-                th = reynolds(temp(nJ+1,nN),M(1,nw),Hsil(nW,nN),Hstart(1,nW),c(1),P(1))
-                temp(nJ+1,nN) = th(1)
+                do nW = 1,5
+                    th = reynolds(temp(nJ+1,nN),M(1,nw),Hsil(nW,nN),Hstart(1,nW),c(1),P(1))
+                    temp(nJ+1,nN) = th(1)
+                    Hmet(1,nN) = th(2)
+                enddo
+
+                !metals-only
+                th = reynolds(temp(nJ+1,nN),M(2,1),Hmet(1,nN),Hstart(2,1),c(2),P(2))
+                temp(nj+1,nN) = th(1)
                 Hmet(1,nN) = th(2)
+
+                !Sulfide-only
+                th = reynolds(temp(nJ+1,nN),M(3,1),Hsulf(1,nN),Hstart(3,1),c(3),P(3))
+                temp(nJ+1,nN) = th(1)
+                Hsulf(1,nN) = th(2)
+
+                !Conjoined grains
+                do nW = 1,5
+                    th = reynolds(temp(nJ+1,nN),M(4,nW),Hconj(nW,nN),Hstart(4,nW),c(4),P(4))
+                    temp(nJ+1,nN) = th(1)
+                    Hconj(nW,nN) = th(2)
+                enddo   
+
+                !Following section adjusts the value of thermal conductivity to account for decreasing pore space after partial silicate melting
+                !If temperature is increasing 
+                if (temp(nj+1,nN) > temp(nJ,nN)) then
+                    !If accretion has finished
+                    if (acc_con ==1) then    
+                        !if the current space step (n) is within the regolith
+                        if (nN > N - Reg) then 
+                        !Do nothing
+                        else 
+                            if(temp(nJ+1,nN) > M(1,5)) then
+                                !If the current nN is NOT in the regolith
+                                !If T exceeds silicate solidus
+                                !Set specific heat capacity for this n to k(3)
+                                bulkk(nN) = k(3)
+                                !If T is below the silicate solidus
+                            else
+                                !Do nothing
+                            endif
+                        endif
+                    !If accretion is continuing
+                    !If T exceeds silicate solidus
+                    else 
+                        if (temp(nJ+1,nN) > M(1,5)) then
+                            bulkk(nN) = K(3)
+                        !If T is below the silicate solidus
+                        else    
+                        !DO nothing    
+                        endif
+                    endif
+                !If temperature is not increasing
+                else 
+                    !DO nothing. this allows for a permanent thermal confuctivigy change after partial melting
+                endif        
             enddo
-
-            !metals-only
-            th = reynolds(temp(nJ+1,nN),M(2,1),Hmet(1,nN),Hstart(2,1),c(2),P(2))
-            temp(nj+1,nN) = th(1)
-            Hmet(1,nN) = th(2)
-
-            enddo   
         enddo
-
          
        
 

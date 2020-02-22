@@ -33,7 +33,7 @@ module functions
 
         T = temp     
 
-        if ( temp < M ) then
+        if ( T < M ) then
             if ( H>=Hin ) then
                 H = Hin 
             else
