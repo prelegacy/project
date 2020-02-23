@@ -4,7 +4,7 @@ module grad
     
 contains
 
-    subroutine grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k,tT)
+    subroutine grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k,tT,thk)
         real,allocatable,dimension(:,:),intent(inout) :: tT
         integer, intent(in) :: rlength, tlength,count,reg
         real,intent(in)::init,bdry,acc_con
@@ -12,7 +12,7 @@ contains
         real,dimension(:,:),intent(in)::Hin,tac,M,Hstart
         real,dimension(:,:),intent(inout) :: bulkk
         real,allocatable,dimension(:)::th
-        real, allocatable,dimension(:,:), intent(out):: temp
+        real, allocatable,dimension(:,:), intent(out):: temp,thk
         real,allocatable,dimension(:,:)::Hsil,Hmet,Hsulf,Hconj
         real :: bulkC, fAL,fFe,Altratio,Feratio,EAl,EFe,LifeAl,LifeFe,q
         integer :: N, J, dr, dt, i, iu,ni,nj,nn,nw
@@ -229,8 +229,27 @@ contains
         tT(:,1) = tac(count,:) !Might need to fix up
         tT(:,2:N+1) = temp
          
-       
+        allocate(thk(14,N))
 
+        thk(1,:) = Temp(J,:)
+
+        thk(2,:) = Hsil(1,:)
+        thk(3,:) = Hsil(2,:)
+        thk(4,:) = Hsil(3,:)
+        thk(5,:) = Hsil(4,:)
+        thk(6,:) = Hsil(5,:)
+
+        thk(7,:) = Hmet(1,:)
+
+        thk(8,:) = Hsulf(1,:)
+
+        thk(9,:) = Hconj(1,:)
+        thk(10,:) = Hconj(2,:)
+        thk(11,:) = Hconj(3,:)
+        thk(12,:) = Hconj(4,:)
+        thk(13,:) = Hconj(5,:)
+       
+        thk(14,:) = bulkk(1,:) !Might need to fix
     end subroutine grad_a
     
 end module grad

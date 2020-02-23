@@ -142,177 +142,179 @@ contains
         enddo
     end subroutine heateqn
     
-    subroutine heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,tac,rho,tT,temps_time)
-    real,allocatable,dimension(:,:):: bulkk
-    real, intent(inout)::init,bdry
-    real,dimension(:,:),intent(inout):: rad,tac,Hin
-    real,allocatable,dimension(:,:),intent(inout)::temp,tac,tT,temps_time
-    real,dimension(:),intent(inout):: deltt,delxx,c,p,init_array,rho
-    real,dimension(:),intent(in) :: Hstart_imp
-    real, dimension(:), intent(in):: k 
-    integer, intent(in):: Z,reg
-    integer, intent(out) :: acc_con
-    integer,allocatable, dimension(:):: rcounter, tcounter
-    integer:: nz,nj,Ncounter, i, iu
-    character(len=25) :: filename
+    subroutine heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,rho,tT,temps_time,&
+        bulkk)
+        real,allocatable,dimension(:,:):: bulkk
+        real, intent(inout)::init,bdry
+        real,dimension(:,:),intent(inout):: rad,tac
+        real,allocatable,dimension(:,:),intent(inout)::temp,tT,temps_time,Hin
+        real,dimension(:),intent(inout):: deltt,delxx,c,p,rho
+        real,dimension(:),intent(in) :: Hstart_imp
+        real, allocatable,dimension(:),intent(inout) :: init_array
+        real, dimension(:), intent(in):: k 
+        integer, intent(in):: Z,reg
+        integer, intent(out) :: acc_con
+        integer,allocatable, dimension(:):: rcounter, tcounter
+        integer:: nz,nj,Ncounter, i, iu
+        character(len=25) :: filename
+        
+        !Set up k-values to be used in the program, make same length as radius, so the corresponding K-value can be used
+        allocate(bulkk(SIZE(rad(:,1)),SIZE(rad(1,:))))
+        allocate(rcounter(SIZE(rad(:,1))),tcounter(SIZE(tac(:,1))))
+        do nz =1,Z
+            Ncounter = 0
+
+
+            !Note that the shape of the accretion time steps is uniform until accretion has ended, steps 1-49 is 202 steps, and step 50 is 4001 steps
+            do nj = 1, SIZE(tac(1,:))
+                Ncounter = Ncounter + 1
+                if (tac(nz,nj) == 0 .and. nj >1) then
+                    tcounter(nz)=Ncounter
+                    exit
+                else if (nz == Z .and. nj == SIZE(tac(1,:))) then
+                    tcounter(nz) = SIZE(tac(1,:))
+                endif 
+            enddo 
     
-    !Set up k-values to be used in the program, make same length as radius, so the corresponding K-value can be used
-    allocate(bulkk(SIZE(rad(:,1)),SIZE(rad(1,:))))
-    allocate(rcounter(SIZE(rad(:,1))),tcounter(SIZE(tac(:,1))))
-    do nz =1,Z
-        Ncounter = 0
 
+            !Because the total length is set to max length of final accretion step, we have to find what value the current accretion step reaches, by finding where the radius value becomes 0 after r=0
+            Ncounter = 0
+            do nj = 1, SIZE(rad(1,:))
+                Ncounter = Ncounter + 1
+                if (rad(nz,nj) == 0 .and. nj >1) then
+                    rcounter(nz)=Ncounter
+                    exit
+                else if (nz == Z .and. nj == SIZE(rad(1,:))) then
+                    rcounter(nz) = SIZE(rad(1,:))
+                    !     !Keeps counting
+                endif  
+                    
+            enddo
+            !If this is the first accretion step, set the initial thermal conductivity
+            if (nz == 1) then
+                bulkk(nz,1:rcounter(nz)) = k(2)
+            
+            !If this is the last accretion step
+            elseif ( nz == Z ) then
 
-        !Note that the shape of the accretion time steps is uniform until accretion has ended, steps 1-49 is 202 steps, and step 50 is 4001 steps
-        do nj = 1, SIZE(tac(1,:))
-            Ncounter = Ncounter + 1
-            if (tac(nz,nj) == 0 .and. nj >1) then
-                tcounter(nz)=Ncounter
-                exit
-            else if (nz == Z .and. nj == SIZE(tac(1,:))) then
-                tcounter(nz) = SIZE(tac(1,:))
-            endif 
-        enddo 
- 
-
-        !Because the total length is set to max length of final accretion step, we have to find what value the current accretion step reaches, by finding where the radius value becomes 0 after r=0
-        Ncounter = 0
-        do nj = 1, SIZE(rad(1,:))
-            Ncounter = Ncounter + 1
-            if (rad(nz,nj) == 0 .and. nj >1) then
-                rcounter(nz)=Ncounter
-                exit
-            else if (nz == Z .and. nj == SIZE(rad(1,:))) then
-                rcounter(nz) = SIZE(rad(1,:))
-                !     !Keeps counting
-            endif  
+                !Set K computed for existing material
+                bulkk(nz,1:rcounter(nz-1)) = 5!thk(14,:)
+                ! call grad_a(nz,rcounter(nz),tcounter(nz),delxx,deltt,temp,init,bdry)
                 
-        enddo
-        !If this is the first accretion step, set the initial thermal conductivity
-        if (nz == 1) then
-            bulkk(nz,1:rcounter(nz)) = k(2)
-           
-        !If this is the last accretion step
-        elseif ( nz == Z ) then
+                !Set K for newly accreted material
+                bulkk(nz,rcounter(nz-1):rcounter(nz))=k(2)
+                !Set K for regolith
+                bulkk(nz, rcounter(nz)- Reg: rcounter(nz)) = k(1)
 
-            !Set K computed for existing material
-            bulkk(nz,1:rcounter(nz-1)) = 5!thk(14,:)
-            ! call grad_a(nz,rcounter(nz),tcounter(nz),delxx,deltt,temp,init,bdry)
+            !if accretion i scontinuing  
+            else 
+                ! call grad_a(nz,rcounter(nz),tcounter(nz),delxx,deltt,temp,init,bdry)
+                bulkk(nz,1:rcounter(nz-1)) = THK(14,:)!Need to find out what thk is , could be K computed for existing material
+                !Set normal K for newly accreted material
+                bulkk(nz,rcounter(nz-1):rcounter(nz)) = k(2)
+            end if   
+
+            !Set up Hin, the full array is a 12x50 matrix but will be reallocated with each step
+            if (z == 1) then
+                !Allocate Hin for the length of the current accretion step
+                allocate(Hin(12,nz))
+                !Set initial Hin for all material at 1st accretion step
+                do i = 1,12
+                    Hin(i,:) = Hstart_imp(i)
+                enddo
+            !If this is not the first accretion step
+            else
+                !Reallocate the length of Hin
+                deallocate(Hin)
+                allocate(Hin(12,nz))
+                do i = 1,12
+                    !Sets Hin as the last computed accretion step for existing material
+                    Hin(i,1:rcounter(nz-1)) = THK(i+1,:)
+                    !Sets initial Hin for newly accreted material
+                    Hin(i,rcounter(nz-1):rcounter(nz)) = Hstart_imp(i)
+                enddo
+            endif
             
-            !Set K for newly accreted material
-            bulkk(nz,rcounter(nz-1):rcounter(nz))=k(2)
-            !Set K for regolith
-            bulkk(nz, rcounter(nz)- Reg: rcounter(nz)) = k(1)
+            !Setup initial T condition values
+            if (nz ==1) then 
 
-        !if accretion i scontinuing  
-        else 
-            ! call grad_a(nz,rcounter(nz),tcounter(nz),delxx,deltt,temp,init,bdry)
-            bulkk(nz,1:rcounter(nz-1)) = THK(14,:)!Need to find out what thk is , could be K computed for existing material
-            !Set normal K for newly accreted material
-            bulkk(nz,rcounter(nz-1):rcounter(nz)) = k(2)
-        end if   
+                allocate(init_array(rcounter(nz)))
 
-        !Set up Hin, the full array is a 12x50 matrix but will be reallocated with each step
-        if (z == 1) then
-            !Allocate Hin for the length of the current accretion step
-            allocate(Hin(12,nz))
-            !Set initial Hin for all material at 1st accretion step
-            do i = 1,12
-                Hin(i,:) = Hstart_imp(i)
-            enddo
-        !If this is not the first accretion step
-        else
-            !Reallocate the length of Hin
-            deallocate(Hin)
-            allocate(Hin(12,nz))
-            do i = 1,12
-                !Sets Hin as the last computed accretion step for existing material
-                Hin(i,1:rcounter(nz-1)) = THK(i+1,:)
-                !Sets initial Hin for newly accreted material
-                Hin(i,rcounter(nz-1):rcounter(nz)) = Hstart_imp(i)
-            enddo
-        endif
-        
-        !Setup initial T condition values
-        if (nz ==1) then 
+                !Set initial T array to init tmep
+                init_array(:) = init
 
-            allocate(init_array(rcounter(nz)))
+            else 
 
-            !Set initial T array to init tmep
-            init_array(:) = init
+                !Reallocate array
+                deallocate(init_array)
+                allocate(init_array(rcounter(nz)))
 
-        else 
+                !Set initial T array to computed T for existing material
+                init_array(1:rcounter(nz-1)) = THK(:)
 
-            !Reallocate array
-            deallocate(init_aray)
-            allocate(init_array(rcounter(nz)))
+                !Set iniitail T for newly accreted material
+                init_array(rcounter(nz-1):rcounter(nz)) = init
 
-            !Set initial T array to computed T for existing material
-            init_array(1:rcounter(nz-1)) = THK(:)
+            endif
 
-            !Set iniitail T for newly accreted material
-            init_array(rcounter(nz-1):rcounter(nz)) = init
+            !Assign a value to accretion condition (acc_con) - 0 if in progressed, 1 if finished
 
-        endif
+            if (nz == Z) then
 
-        !Assign a value to accretion condition (acc_con) - 0 if in progressed, 1 if finished
+                !If accreiton has finished
+                acc_con = 1
 
-        if (nz == Z) then
+            else 
 
-            !If accreiton has finished
-            acc_con = 1
+                !If accretion is still occuring 
+                acc_con = 0
 
-        else 
+            endif 
 
-            !If accretion is still occuring 
-            acc_con = 0
+            !Runs the model to find the temperature at each space step through time
 
-        endif 
+            !If this is the first accretion step
+            if (nz == 1) then
 
-        !Runs the model to find the temperature at each space step through time
+                !Allocate the length of the tT array
+                allocate(tT(tcounter(nz),rcounter(nz)))
+                
+            !If this is not the first accretion step
+            else 
 
-        !If this is the first accretion step
-        if (nz == 1) then
-
-            !Allocate the length of the tT array
-            allocate(tT(tcounter(nz),rcounter(nz)))
+                !Reallocate tT
+                deallocate(tT)
+                allocate(tT(tcounter(nz),rcounter(nz)))
+            endif 
             
-        !If this is not the first accretion step
-        else 
-
-            !Reallocate tT
-            deallocate(tT)
-            allocate(tT(tcounter(nz),rcounter(nz)))
-        endif 
-        
-        !Might need to fix up
-        !tT = heateqn_grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k)
-        call grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k,tT)
- 
-
-        !Fils temps_time matrix with the times and temperatures
-        if(nz ==1 ) then
-
-            temps_time(1:tcounter(nz),1:(rcounter(nz)+1)) = tT
-        endif
-
-
-
-    enddo
-
+            !Might need to fix up
+            !tT = heateqn_grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k)
+            call grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k,tT)
     
 
-    ! write(filename,"(a)")'koutput.dat'
-    ! print "(a)",' writing to '//trim(filename)
-    ! open(newunit=iu,file=filename,status='replace',&
-    ! action='write')
-    ! write(iu,"(a)") '#  k'
-    ! do i=1,SIZE(bulkk(1,:))
-    !         write(iu,fmt='(50F15.2)') bulkk(:,i) 
-    ! enddo
-    ! close(iu)
+            !Fils temps_time matrix with the times and temperatures
+            if(nz ==1 ) then
 
-    !THK = call heat eqn grad B
+                temps_time(1:tcounter(nz),1:(rcounter(nz)+1)) = tT
+            endif
+
+
+
+        enddo
+
+        
+
+        ! write(filename,"(a)")'koutput.dat'
+        ! print "(a)",' writing to '//trim(filename)
+        ! open(newunit=iu,file=filename,status='replace',&
+        ! action='write')
+        ! write(iu,"(a)") '#  k'
+        ! do i=1,SIZE(bulkk(1,:))
+        !         write(iu,fmt='(50F15.2)') bulkk(:,i) 
+        ! enddo
+        ! close(iu)
+
+        !THK = call heat eqn grad B
     end subroutine heateqn_a
 
 
