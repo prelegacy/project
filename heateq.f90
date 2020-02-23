@@ -4,6 +4,7 @@ module heateq
     implicit none
     
 contains
+
     subroutine heateqn(temp,r,t,dr,dt,init,bdry,Hin,Hsil,Hmet,Hsulf,Hconj,P,c,k,bulkk,q,fal, al, E_al, tau_al, ffe,fe,E_fe,tau_fe&
         , rho, M)
         real, dimension(:), intent(inout) ::r,t ,dr,dt,P,c,k,fal,ffe,rho
@@ -141,14 +142,16 @@ contains
         enddo
     end subroutine heateqn
     
-    subroutine heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p)
+    subroutine heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,tac,rho,tT,temps_time)
     real,allocatable,dimension(:,:):: bulkk
     real, intent(inout)::init,bdry
-    real,dimension(:,:),intent(inout):: rad,tac
-    real,allocatable,dimension(:,:),intent(inout)::temp
-    real,dimension(:),intent(inout):: deltt,delxx,c,p
+    real,dimension(:,:),intent(inout):: rad,tac,Hin
+    real,allocatable,dimension(:,:),intent(inout)::temp,tac,tT,temps_time
+    real,dimension(:),intent(inout):: deltt,delxx,c,p,init_array,rho
+    real,dimension(:),intent(in) :: Hstart_imp
     real, dimension(:), intent(in):: k 
     integer, intent(in):: Z,reg
+    integer, intent(out) :: acc_con
     integer,allocatable, dimension(:):: rcounter, tcounter
     integer:: nz,nj,Ncounter, i, iu
     character(len=25) :: filename
@@ -204,9 +207,96 @@ contains
         !if accretion i scontinuing  
         else 
             ! call grad_a(nz,rcounter(nz),tcounter(nz),delxx,deltt,temp,init,bdry)
-            ! bulkk(nz,)
-
+            bulkk(nz,1:rcounter(nz-1)) = THK(14,:)!Need to find out what thk is , could be K computed for existing material
+            !Set normal K for newly accreted material
+            bulkk(nz,rcounter(nz-1):rcounter(nz)) = k(2)
         end if   
+
+        !Set up Hin, the full array is a 12x50 matrix but will be reallocated with each step
+        if (z == 1) then
+            !Allocate Hin for the length of the current accretion step
+            allocate(Hin(12,nz))
+            !Set initial Hin for all material at 1st accretion step
+            do i = 1,12
+                Hin(i,:) = Hstart_imp(i)
+            enddo
+        !If this is not the first accretion step
+        else
+            !Reallocate the length of Hin
+            deallocate(Hin)
+            allocate(Hin(12,nz))
+            do i = 1,12
+                !Sets Hin as the last computed accretion step for existing material
+                Hin(i,1:rcounter(nz-1)) = THK(i+1,:)
+                !Sets initial Hin for newly accreted material
+                Hin(i,rcounter(nz-1):rcounter(nz)) = Hstart_imp(i)
+            enddo
+        endif
+        
+        !Setup initial T condition values
+        if (nz ==1) then 
+
+            allocate(init_array(rcounter(nz)))
+
+            !Set initial T array to init tmep
+            init_array(:) = init
+
+        else 
+
+            !Reallocate array
+            deallocate(init_aray)
+            allocate(init_array(rcounter(nz)))
+
+            !Set initial T array to computed T for existing material
+            init_array(1:rcounter(nz-1)) = THK(:)
+
+            !Set iniitail T for newly accreted material
+            init_array(rcounter(nz-1):rcounter(nz)) = init
+
+        endif
+
+        !Assign a value to accretion condition (acc_con) - 0 if in progressed, 1 if finished
+
+        if (nz == Z) then
+
+            !If accreiton has finished
+            acc_con = 1
+
+        else 
+
+            !If accretion is still occuring 
+            acc_con = 0
+
+        endif 
+
+        !Runs the model to find the temperature at each space step through time
+
+        !If this is the first accretion step
+        if (nz == 1) then
+
+            !Allocate the length of the tT array
+            allocate(tT(tcounter(nz),rcounter(nz)))
+            
+        !If this is not the first accretion step
+        else 
+
+            !Reallocate tT
+            deallocate(tT)
+            allocate(tT(tcounter(nz),rcounter(nz)))
+        endif 
+        
+        !Might need to fix up
+        !tT = heateqn_grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k)
+        call grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k,tT)
+ 
+
+        !Fils temps_time matrix with the times and temperatures
+        if(nz ==1 ) then
+
+            temps_time(1:tcounter(nz),1:(rcounter(nz)+1)) = tT
+        endif
+
+
 
     enddo
 
