@@ -238,8 +238,9 @@ module setup
         tstep_tot = tstep_dur*z +tstep_fin
         
         !Creates matrix that tracks timestep in column 1 and temperatures for remaining radial positions
-        allocate(temps_time(tstep_tot,rstep_tot+1))
-        
+        ! allocate(temps_time(tstep_tot,rstep_tot+1))
+        allocate(temps_time(tstep_tot,tstep_tot))
+
         !Create a matrix to hold the values of rad and tac
         allocate(rad(Z,INT(rvals(Z)/1000+1)))
         allocate(tac(Z,tstep_fin))

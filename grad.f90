@@ -48,6 +48,8 @@ contains
         !Size of space step and time step
         dr = INT(delxx(count))
         dt = INT(deltt(count))
+
+ 
         
         !Set up matrix of J-N (time-space) 
         !Filled with temperature values for each space step and time s
@@ -94,9 +96,8 @@ contains
 
             !Compute T at next time step
             do nN = 2,N-1
-
                 !Note that our bulkk k-value is a 2D array which is updated at each accretion step
-                q = heat(fAL, Altratio, EAl, LifeAl, fFe,Feratio,EFe,LifeFe, tac(nN,nJ+1))
+                q = heat(fAL, Altratio, EAl, LifeAl, fFe,Feratio,EFe,LifeFe, tac(count,nJ+1))
 
                 temp(nJ+1,nN) = ((2*bulkk(count,nN)*dt)/(rho(1)*bulkC*nN*(dr**2)))*(temp(nJ,nN+1)-temp(nJ,nN-1))+((bulkk(count,nN)*&
                 dt)/(rho(1)*bulkC*(dr**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN-1))+temp(nJ,nN)+(dt/bulkC)*q
@@ -229,40 +230,49 @@ contains
         enddo
         !print*,'size of tT(1) is', SIZE(tac(count,:)), 'array size is', SIZE(tT(:,1))
         !print*,'size of tT(2) is', SIZE(temp)!, 'array size is', SIZE(tT(:,2:N+1))
-        do i = 1, INT(SIZE(tT(:,1)))
-            tT(i,1) = tac(count,i) !Might need to fix up
-        enddo
+            tT(1,1) = tac(count,1) - dt
+            do i = 1, INT(SIZE(tac(1,:))-1)
+                tT(i+1,1) = tac(count,i) !Might need to fix up
+            enddo
         
 
         ! print*,'size of tT(i,2:N+1)', SIZE(tT(:,2:N)), 'array size', SIZE(temp(:,:))
-        print*,'tT sizes', SIZE(tT(:,1)), SIZE( tT(:,2:N)),size(temp(:,:))
-        ! do i = 1,SIZE(tT(:,1))
-        !     tT(i,2:N) = temp(i,:)
-        ! enddo
+     
+
+        print*, SHAPE(temp), shape(tT)
+        do i = 1,SIZE(temp(:,1))
+            do j = 1, SIZE(temp(1,:))
+                tT(i,j+1) = temp(i,j)
+            enddo
+        enddo
+
          
         allocate(thk(14,N))
 
         thk(1,:) = Temp(J,:)
 
-        print*,'thk size is', SIZE(thk(2,:))
-        print*,'size of Hsil(1,:) is', SIZE(Hsil(1,:))
-        ! thk(2,:) = Hsil(1,:)
-        ! thk(3,:) = Hsil(2,:)
-        ! thk(4,:) = Hsil(3,:)
-        ! thk(5,:) = Hsil(4,:)
-        ! thk(6,:) = Hsil(5,:)
+        thk(2,:) = Hsil(1,:)
+        thk(3,:) = Hsil(2,:)
+        thk(4,:) = Hsil(3,:)
+        thk(5,:) = Hsil(4,:)
+        thk(6,:) = Hsil(5,:)
 
-        ! thk(7,:) = Hmet(1,:)
+        thk(7,:) = Hmet(1,:)
 
-        ! thk(8,:) = Hsulf(1,:)
+        thk(8,:) = Hsulf(1,:)
 
-        ! thk(9,:) = Hconj(1,:)
-        ! thk(10,:) = Hconj(2,:)
-        ! thk(11,:) = Hconj(3,:)
-        ! thk(12,:) = Hconj(4,:)
-        ! thk(13,:) = Hconj(5,:)
+        thk(9,:) = Hconj(1,:)
+        thk(10,:) = Hconj(2,:)
+        thk(11,:) = Hconj(3,:)
+        thk(12,:) = Hconj(4,:)
+        thk(13,:) = Hconj(5,:)
        
-        ! thk(14,:) = bulkk(count,:) !Might need to fix
+        do i = 1,SIZE(thk(14,:))
+            thk(14,:) = bulkk(count,i)
+        enddo
+        
+        print*,'szie of J is', J-1
+
     end subroutine grad_a
     
 end module grad

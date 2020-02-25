@@ -279,7 +279,8 @@ contains
 
                 !Allocate the length of the tT array
                 !allocate(tT(tcounter(nz),rcounter(nz)))
-                allocate(tT(SIZE(tac(nZ,:)),rcounter(nz)))
+                allocate(tT(SIZE(tac(nZ,:)),rcounter(nz)+1))
+                !allocate(tT(SIZE(tac(:,1)),SIZE(tac(nZ,:))))
                 
                 
             !If this is not the first accretion step
@@ -287,23 +288,25 @@ contains
 
                 !Reallocate tT
                 deallocate(tT)
-                allocate(tT(tcounter(nz),rcounter(nz)))
+                ! allocate(tT(tcounter(nz),rcounter(nz)))
+                allocate(tT(SIZE(tac(nZ,:)),SIZE(tac(nZ,:))))
             endif 
             
             !Might need to fix up
             !tT = heateqn_grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k)
             call grad_a(nZ,rcounter(nz),tcounter(nz), delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,&
             bulkk,M,Hstart,acc_con,reg,k,tT,thk)
-    
-
+            print*,'tcounter(nz) is', tcounter(nz)
+            print*,'tac(nz) is', SIZE(tac(nz,:))
             !Fils temps_time matrix with the times and temperatures
-            if(nz ==1 ) then
-                do i = 1,SIZE(tT(:,1))
-                    do j = 1,SIZE(tT(1,:))
-                        temps_time(i,j) = tT(i,j)
-                    enddo
-                enddo
-            endif
+
+            ! if(nz ==1 ) then
+            !     do i = 1,SIZE(tT(:,1))
+            !         do j = 1,SIZE(tT(1,:))
+            !             temps_time(i,j) = tT(i,j)
+            !         enddo
+            !     enddo
+            ! endif
 
 
 
@@ -311,17 +314,20 @@ contains
 
         
 
-        write(filename,"(a)")'toutput.dat'
+        write(filename,"(a)")'toutput.txt'
         print "(a)",' writing to '//trim(filename)
         open(newunit=iu,file=filename,status='replace',&
         action='write')
-        write(iu,"(a)") '#  k'
-        do i=1,SIZE(temps_time(1,:))
-                write(iu,fmt='(201F15.2)') temps_time(:,i) 
+        write(iu,"(a)") '#  t,  rx500'
+        do i=1,SIZE(tT(:,1))
+            ! print*,' i =',i, ' of ',SIZE(tT(1,:))
+            write(iu,fmt='(10F15.2)') tT(i,:) 
         enddo
         close(iu)
 
-        !THK = call heat eqn grad B
+
+   
+
     end subroutine heateqn_a
 
 
