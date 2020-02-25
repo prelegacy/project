@@ -26,6 +26,7 @@ contains
         J = SIZE(t)
 
         allocate(temp(J,N))
+
         
         !inputing initial conditions 
         !First row of matrix T
@@ -143,11 +144,11 @@ contains
     end subroutine heateqn
     
     subroutine heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,rho,tT,temps_time,&
-        bulkk)
+        bulkk,THK,m,Hstart)
         real,allocatable,dimension(:,:):: bulkk
         real, intent(inout)::init,bdry
-        real,dimension(:,:),intent(inout):: rad,tac
-        real,allocatable,dimension(:,:),intent(inout)::temp,tT,temps_time,Hin
+        real,dimension(:,:),intent(inout):: rad,tac, m, Hstart,temps_time
+        real,allocatable,dimension(:,:),intent(inout)::temp,tT,Hin,thk
         real,dimension(:),intent(inout):: deltt,delxx,c,p,rho
         real,dimension(:),intent(in) :: Hstart_imp
         real, allocatable,dimension(:),intent(inout) :: init_array
@@ -155,13 +156,13 @@ contains
         integer, intent(in):: Z,reg
         integer, intent(out) :: acc_con
         integer,allocatable, dimension(:):: rcounter, tcounter
-        integer:: nz,nj,Ncounter, i, iu
+        integer:: nz,nj,Ncounter, i, iu,j
         character(len=25) :: filename
         
         !Set up k-values to be used in the program, make same length as radius, so the corresponding K-value can be used
         allocate(bulkk(SIZE(rad(:,1)),SIZE(rad(1,:))))
         allocate(rcounter(SIZE(rad(:,1))),tcounter(SIZE(tac(:,1))))
-        do nz =1,Z
+        do nz =1,1!Z
             Ncounter = 0
 
 
@@ -198,7 +199,7 @@ contains
             elseif ( nz == Z ) then
 
                 !Set K computed for existing material
-                bulkk(nz,1:rcounter(nz-1)) = 5!thk(14,:)
+                bulkk(nz,1:rcounter(nz-1)) = THK(14,:)
                 ! call grad_a(nz,rcounter(nz),tcounter(nz),delxx,deltt,temp,init,bdry)
                 
                 !Set K for newly accreted material
@@ -215,9 +216,9 @@ contains
             end if   
 
             !Set up Hin, the full array is a 12x50 matrix but will be reallocated with each step
-            if (z == 1) then
+            if (nZ == 1) then
                 !Allocate Hin for the length of the current accretion step
-                allocate(Hin(12,nz))
+                allocate(Hin(12,rcounter(nz)))
                 !Set initial Hin for all material at 1st accretion step
                 do i = 1,12
                     Hin(i,:) = Hstart_imp(i)
@@ -250,7 +251,7 @@ contains
                 allocate(init_array(rcounter(nz)))
 
                 !Set initial T array to computed T for existing material
-                init_array(1:rcounter(nz-1)) = THK(:)
+                init_array(1:rcounter(nz-1)) = THK(1,:)
 
                 !Set iniitail T for newly accreted material
                 init_array(rcounter(nz-1):rcounter(nz)) = init
@@ -277,7 +278,9 @@ contains
             if (nz == 1) then
 
                 !Allocate the length of the tT array
-                allocate(tT(tcounter(nz),rcounter(nz)))
+                !allocate(tT(tcounter(nz),rcounter(nz)))
+                allocate(tT(SIZE(tac(nZ,:)),rcounter(nz)))
+                
                 
             !If this is not the first accretion step
             else 
@@ -289,13 +292,17 @@ contains
             
             !Might need to fix up
             !tT = heateqn_grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k)
-            call grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k,tT)
+            call grad_a(nZ,rcounter(nz),tcounter(nz), delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,&
+            bulkk,M,Hstart,acc_con,reg,k,tT,thk)
     
 
             !Fils temps_time matrix with the times and temperatures
             if(nz ==1 ) then
-
-                temps_time(1:tcounter(nz),1:(rcounter(nz)+1)) = tT
+                do i = 1,SIZE(tT(:,1))
+                    do j = 1,SIZE(tT(1,:))
+                        temps_time(i,j) = tT(i,j)
+                    enddo
+                enddo
             endif
 
 
@@ -304,15 +311,15 @@ contains
 
         
 
-        ! write(filename,"(a)")'koutput.dat'
-        ! print "(a)",' writing to '//trim(filename)
-        ! open(newunit=iu,file=filename,status='replace',&
-        ! action='write')
-        ! write(iu,"(a)") '#  k'
-        ! do i=1,SIZE(bulkk(1,:))
-        !         write(iu,fmt='(50F15.2)') bulkk(:,i) 
-        ! enddo
-        ! close(iu)
+        write(filename,"(a)")'toutput.dat'
+        print "(a)",' writing to '//trim(filename)
+        open(newunit=iu,file=filename,status='replace',&
+        action='write')
+        write(iu,"(a)") '#  k'
+        do i=1,SIZE(temps_time(1,:))
+                write(iu,fmt='(201F15.2)') temps_time(:,i) 
+        enddo
+        close(iu)
 
         !THK = call heat eqn grad B
     end subroutine heateqn_a

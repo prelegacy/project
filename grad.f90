@@ -7,7 +7,7 @@ contains
     subroutine grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k,tT,thk)
         real,allocatable,dimension(:,:),intent(inout) :: tT
         integer, intent(in) :: rlength, tlength,count,reg
-        real,intent(in)::init,bdry,acc_con
+        real,intent(in)::init,bdry
         real,dimension(:),intent(in):: delxx,deltt,c,p,rho,k
         real,dimension(:,:),intent(in)::Hin,tac,M,Hstart
         real,dimension(:,:),intent(inout) :: bulkk
@@ -16,9 +16,11 @@ contains
         real,allocatable,dimension(:,:)::Hsil,Hmet,Hsulf,Hconj
         real :: bulkC, fAL,fFe,Altratio,Feratio,EAl,EFe,LifeAl,LifeFe,q
         integer :: N, J, dr, dt, i, iu,ni,nj,nn,nw
+        integer, intent(in) :: acc_con
         character(len=25) :: filename
         !Might move heat source setup later to setup.f90
         
+        print*, 'at step ', count
         !Abundance of Al (kg^-1)
         fAL = 2.53e23
         !Abundance of Fe (kg^-1)
@@ -96,8 +98,8 @@ contains
                 !Note that our bulkk k-value is a 2D array which is updated at each accretion step
                 q = heat(fAL, Altratio, EAl, LifeAl, fFe,Feratio,EFe,LifeFe, tac(nN,nJ+1))
 
-                temp(nJ+1,nN) = ((2*bulkk(nJ,nN)*dt)/(rho(1)*bulkC*nN*(dr**2)))*(temp(nJ,nN+1)-temp(nJ,nN-1))+((bulkk(nJ,nN)*dt)/ &
-                (rho(1)*bulkC*(dr**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN-1))+temp(nJ,nN)+(dt/bulkC)*q
+                temp(nJ+1,nN) = ((2*bulkk(count,nN)*dt)/(rho(1)*bulkC*nN*(dr**2)))*(temp(nJ,nN+1)-temp(nJ,nN-1))+((bulkk(count,nN)*&
+                dt)/(rho(1)*bulkC*(dr**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN-1))+temp(nJ,nN)+(dt/bulkC)*q
 
                 !Neumann boundary conditions
                 temp(nJ+1,1) = temp(nJ+1,2)
@@ -225,31 +227,42 @@ contains
             enddo
 
         enddo
+        !print*,'size of tT(1) is', SIZE(tac(count,:)), 'array size is', SIZE(tT(:,1))
+        !print*,'size of tT(2) is', SIZE(temp)!, 'array size is', SIZE(tT(:,2:N+1))
+        do i = 1, INT(SIZE(tT(:,1)))
+            tT(i,1) = tac(count,i) !Might need to fix up
+        enddo
+        
 
-        tT(:,1) = tac(count,:) !Might need to fix up
-        tT(:,2:N+1) = temp
+        ! print*,'size of tT(i,2:N+1)', SIZE(tT(:,2:N)), 'array size', SIZE(temp(:,:))
+        print*,'tT sizes', SIZE(tT(:,1)), SIZE( tT(:,2:N)),size(temp(:,:))
+        ! do i = 1,SIZE(tT(:,1))
+        !     tT(i,2:N) = temp(i,:)
+        ! enddo
          
         allocate(thk(14,N))
 
         thk(1,:) = Temp(J,:)
 
-        thk(2,:) = Hsil(1,:)
-        thk(3,:) = Hsil(2,:)
-        thk(4,:) = Hsil(3,:)
-        thk(5,:) = Hsil(4,:)
-        thk(6,:) = Hsil(5,:)
+        print*,'thk size is', SIZE(thk(2,:))
+        print*,'size of Hsil(1,:) is', SIZE(Hsil(1,:))
+        ! thk(2,:) = Hsil(1,:)
+        ! thk(3,:) = Hsil(2,:)
+        ! thk(4,:) = Hsil(3,:)
+        ! thk(5,:) = Hsil(4,:)
+        ! thk(6,:) = Hsil(5,:)
 
-        thk(7,:) = Hmet(1,:)
+        ! thk(7,:) = Hmet(1,:)
 
-        thk(8,:) = Hsulf(1,:)
+        ! thk(8,:) = Hsulf(1,:)
 
-        thk(9,:) = Hconj(1,:)
-        thk(10,:) = Hconj(2,:)
-        thk(11,:) = Hconj(3,:)
-        thk(12,:) = Hconj(4,:)
-        thk(13,:) = Hconj(5,:)
+        ! thk(9,:) = Hconj(1,:)
+        ! thk(10,:) = Hconj(2,:)
+        ! thk(11,:) = Hconj(3,:)
+        ! thk(12,:) = Hconj(4,:)
+        ! thk(13,:) = Hconj(5,:)
        
-        thk(14,:) = bulkk(1,:) !Might need to fix
+        ! thk(14,:) = bulkk(count,:) !Might need to fix
     end subroutine grad_a
     
 end module grad
