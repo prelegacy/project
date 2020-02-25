@@ -64,10 +64,7 @@ implicit none
         endif
 		call  heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p)
 
-		!Outsputs
-		!tT = zeros(J,N+1)
-		!tT(:,1)=t
-		!tT(:,2:N+1)=T
+		!Create the write outputs
 		
 	end select
 	
