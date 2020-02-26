@@ -142,10 +142,11 @@ module setup
     end subroutine setupinitial
     
     subroutine gradinitial(k,reg,rho,c,P,init,bdry,Hstart,Hstart_imp,M,Z,final_rad,rvals, rstep_tot,t_acc,t_dur,tfin,tvals &
-        ,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time,rad,tac,delt,delx,delxx,tcounter,rcounter,deltt)
+        ,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time,rad,tac,delt,delx,delxx,tcounter,rcounter,deltt,tac_final)
         real,allocatable,dimension(:),intent(out):: k,rho, c,P,Hstart_imp,rvals,tvals,tcounter, rcounter,delxx,deltt
         ! real(kind=8), allocatable,dimension(:),intent(out) ::
         real,allocatable,dimension(:,:),intent(out):: Hstart,M,N,J,temps_time,rad,tac,delt,delx
+        real,allocatable,dimension(:),intent(out):: tac_final
         integer, intent(out):: reg,Z,rstep_tot,tstep_dur,tstep_fin,tstep_tot
         real, intent(out):: init, bdry,final_rad,t_acc,t_dur,tfin
         integer ::nz, zval,i,nN,iu,nJ,ncounter
@@ -243,7 +244,9 @@ module setup
 
         !Create a matrix to hold the values of rad and tac
         allocate(rad(Z,INT(rvals(Z)/1000+1)))
-        allocate(tac(Z,tstep_fin))
+        ! allocate(tac(Z,tstep_fin)) !Old values
+        allocate(tac(Z,tstep_dur))
+        allocate(tac_final(tstep_fin))
         
         !For all accretion steps
         do nz =1,Z
@@ -254,19 +257,38 @@ module setup
                 rad(nz,nn)= nn*1000 -1000
             enddo
             !if accretion is finished, time steps go out to tfin (Myr)
-            if (nz == Z) then
-                do nn = 1,tstep_fin
-                    tac(Z,nn) = INT(tvals(z))+INT(((tfin-tvals(z))/tstep_fin)*nn)
-                enddo
-            !If accretion is continuing, time steps go between accretion step and next
-            else 
                 do nn = 1, tstep_dur
-                    tac(nz,nn) = tvals(nz)+INT((tvals(nz+1)-tvals(nz))*nn)
+                    tac(nz,nn) = INT(tvals(nz)+((tvals(nz+1)-tvals(nz))/tstep_dur)*nn)
                 enddo
-            endif
-
         enddo
-        
+
+        !Computing remaining time steps after accretion has ended
+            do nn = 1,tstep_fin
+                tac_final(nn) = INT(tvals(50))+INT(((tfin-tvals(50))/tstep_fin)*nn)
+            enddo
+        !If accretion is continuing, time steps go between accretion step and next
+    
+
+
+
+        ! write(filename,"(a)")'toutput.txt'
+        ! print "(a)",' writing to '//trim(filename)
+        ! open(newunit=iu,file=filename,status='replace',&
+        ! action='write')
+        ! write(iu,"(a)") '#  t'
+        ! do i = 1,SIZE(tac(:,1))
+        !     write(iu,*)tac(i,:)
+        ! enddo
+
+        ! write(filename,"(a)")'foutput.txt'
+        ! print "(a)",' writing to '//trim(filename)
+        ! open(newunit=iu,file=filename,status='replace',&
+        ! action='write')
+        ! write(iu,"(a)") '#  t'
+        ! do i = 1,SIZE(tac_final(:))
+        !     write(iu,*)tac_final(i)
+        ! enddo
+
         !Set length of accretion steps in time and space
         nN = 50
         nJ = 50 
