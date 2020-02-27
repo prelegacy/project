@@ -144,7 +144,7 @@ contains
     end subroutine heateqn
     
     subroutine heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,rho,tT,temps_time,&
-        bulkk,THK,m,Hstart)
+        bulkk,THK,m,Hstart,tstep_dur)
         real,allocatable,dimension(:,:):: bulkk
         real, intent(inout)::init,bdry
         real,dimension(:,:),intent(inout):: rad,tac, m, Hstart,temps_time
@@ -155,30 +155,16 @@ contains
         real, dimension(:), intent(in):: k 
         integer, intent(in):: Z,reg
         integer, intent(out) :: acc_con
-        integer,allocatable, dimension(:):: rcounter, tcounter
+        integer,intent(inout) :: tstep_dur
+        integer,allocatable, dimension(:):: rcounter!, tcounter
         integer:: nz,nj,Ncounter, i, iu,j
         character(len=25) :: filename
         
         !Set up k-values to be used in the program, make same length as radius, so the corresponding K-value can be used
         allocate(bulkk(SIZE(rad(:,1)),SIZE(rad(1,:))))
-        allocate(rcounter(SIZE(rad(:,1))),tcounter(SIZE(tac(:,1))))
-        do nz =1,1!Z
-            Ncounter = 0
+        allocate(rcounter(SIZE(rad(:,1))))!,tcounter(SIZE(tac(:,1))))
 
-
-            !Note that the shape of the accretion time steps is uniform until accretion has ended, steps 1-49 is 202 steps, and step 50 is 4001 steps
-            do nj = 1, SIZE(tac(1,:))
-                Ncounter = Ncounter + 1
-                if (tac(nz,nj) == 0 .and. nj >1) then
-                    tcounter(nz)=Ncounter
-                    exit
-                else if (nz == Z .and. nj == SIZE(tac(1,:))) then
-                    tcounter(nz) = SIZE(tac(1,:))
-                endif 
-            enddo 
-    
-
-            !Because the total length is set to max length of final accretion step, we have to find what value the current accretion step reaches, by finding where the radius value becomes 0 after r=0
+        do nz = 1, Z 
             Ncounter = 0
             do nj = 1, SIZE(rad(1,:))
                 Ncounter = Ncounter + 1
@@ -191,6 +177,24 @@ contains
                 endif  
                     
             enddo
+        enddo 
+        do nz =1,Z
+            Ncounter = 0
+
+            !Note that the shape of the accretion time steps is uniform until accretion has ended, steps 1-49 is 202 steps, and step 50 is 4001 steps
+            ! do nj = 1, SIZE(tac(1,:))
+            !     Ncounter = Ncounter + 1
+            !     if (tac(nz,nj) == 0 .and. nj >1) then
+            !         tcounter(nz)=Ncounter
+            !         exit
+            !     else if (nz == Z .and. nj == SIZE(tac(1,:))) then
+            !         tcounter(nz) = SIZE(tac(1,:))
+            !     endif 
+            ! enddo 
+    
+
+            !Because the total length is set to max length of final accretion step, we have to find what value the current accretion step reaches, by finding where the radius value becomes 0 after r=0
+            
             !If this is the first accretion step, set the initial thermal conductivity
             if (nz == 1) then
                 bulkk(nz,1:rcounter(nz)) = k(2)
@@ -200,7 +204,7 @@ contains
 
                 !Set K computed for existing material
                 bulkk(nz,1:rcounter(nz-1)) = THK(14,:)
-                ! call grad_a(nz,rcounter(nz),tcounter(nz),delxx,deltt,temp,init,bdry)
+          
                 
                 !Set K for newly accreted material
                 bulkk(nz,rcounter(nz-1):rcounter(nz))=k(2)
@@ -209,7 +213,7 @@ contains
 
             !if accretion i scontinuing  
             else 
-                ! call grad_a(nz,rcounter(nz),tcounter(nz),delxx,deltt,temp,init,bdry)
+                
                 bulkk(nz,1:rcounter(nz-1)) = THK(14,:)!Need to find out what thk is , could be K computed for existing material
                 !Set normal K for newly accreted material
                 bulkk(nz,rcounter(nz-1):rcounter(nz)) = k(2)
@@ -227,11 +231,13 @@ contains
             else
                 !Reallocate the length of Hin
                 deallocate(Hin)
-                allocate(Hin(12,nz))
+                allocate(Hin(12,rcounter(nz)))
                 do i = 1,12
                     !Sets Hin as the last computed accretion step for existing material
                     Hin(i,1:rcounter(nz-1)) = THK(i+1,:)
+
                     !Sets initial Hin for newly accreted material
+                    !print*,'looking at i', i,'looking at rounter',rcounter(nz)
                     Hin(i,rcounter(nz-1):rcounter(nz)) = Hstart_imp(i)
                 enddo
             endif
@@ -249,7 +255,6 @@ contains
                 !Reallocate array
                 deallocate(init_array)
                 allocate(init_array(rcounter(nz)))
-
                 !Set initial T array to computed T for existing material
                 init_array(1:rcounter(nz-1)) = THK(1,:)
 
@@ -278,187 +283,58 @@ contains
             if (nz == 1) then
 
                 !Allocate the length of the tT array
-                !allocate(tT(tcounter(nz),rcounter(nz)))
-                allocate(tT(SIZE(tac(nZ,:)),rcounter(nz)+1))
-                !allocate(tT(SIZE(tac(:,1)),SIZE(tac(nZ,:))))
-                
+                allocate(tT(SIZE(tac(nZ,:)),rcounter(nz)+1))                
                 
             !If this is not the first accretion step
             else 
 
                 !Reallocate tT
                 deallocate(tT)
-                ! allocate(tT(tcounter(nz),rcounter(nz)))
-                allocate(tT(SIZE(tac(nZ,:)),SIZE(tac(nZ,:))))
+                allocate(tT(SIZE(tac(nZ,:)),rcounter(nz)+1))
+
             endif 
             
-            !Might need to fix up
-            !tT = heateqn_grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k)
-            call grad_a(nZ,rcounter(nz),tcounter(nz), delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,&
-            bulkk,M,Hstart,acc_con,reg,k,tT,thk)
-            print*,'tcounter(nz) is', tcounter(nz)
+            deltt = (tac(nz,2)-tac(nz,1))
+            !Might need to fix up   
+            call grad_a(nZ,rcounter(nz),tstep_dur, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,&
+            bulkk,M,Hstart,acc_con,reg,k,tT,thk,init_array)
+           
+            ! print*,'tcounter(nz) is', tcounter(nz)
             print*,'tac(nz) is', SIZE(tac(nz,:))
+            print*,'----------------------'
             !Fils temps_time matrix with the times and temperatures
+       
+            if(nZ == 1) then
+                temps_time(1:tstep_dur*nZ,1:(rcounter(nz)+1))=tT(:,:)
+            else 
+                temps_time(tstep_dur*(nZ-1):(tstep_dur*nZ)-1,1:(rcounter(nz)+1))=tT(:,:)
+            endif      
 
-            ! if(nz ==1 ) then
-            !     do i = 1,SIZE(tT(:,1))
-            !         do j = 1,SIZE(tT(1,:))
-            !             temps_time(i,j) = tT(i,j)
-            !         enddo
-            !     enddo
-            ! endif
-
+        !     write(filename,"(a,i5.5,a)") 'tt_',nz,'.txt'
+        ! print "(a)",' writing to '//trim(filename)
+        ! open(newunit=iu,file=filename,status='replace',&
+        ! action='write')
+        ! write(iu,"(a)") '#  t, r'
+        !     do i=1,SIZE(tT(:,1))
+        !         write(iu,fmt='(10F15.2)') tT(i,:)
+        !     enddo
+        ! close(iu)
 
 
         enddo
 
-        
 
-        write(filename,"(a)")'toutput.txt'
+        print*,'temp is',temps_time(tstep_dur*1,rcounter(1)+1)
+
+        write(filename,"(a)") 'tempstime.txt'
         print "(a)",' writing to '//trim(filename)
         open(newunit=iu,file=filename,status='replace',&
         action='write')
-        write(iu,"(a)") '#  t,  rx500'
-        do i=1,SIZE(tT(:,1))
-            ! print*,' i =',i, ' of ',SIZE(tT(1,:))
-            write(iu,fmt='(10F15.2)') tT(i,:) 
-        enddo
+        write(iu,"(a)") '#  t, r'
+            do i=1,SIZE(temps_time(:,1))
+                write(iu,*) temps_time(i,:)
+            enddo
         close(iu)
 
-
-   
-
     end subroutine heateqn_a
-
-
-
-    ! heateqn_a(Z,rad,rvals,tac,tvals,tfin,tstep_fin,tstep_dur,delt,delx)
-    !     integer,intent(in):: Z,tstep_fin,tstep_dur
-    !     real, allocatable,dimension(:,:), intent(out):: rad,tac,delt,delx
-    !     real,dimension(:),intent(in)::rvals,tvals
-    !     real,intent(in):: tfin
-    !     real :: stab1, stab2
-    !     integer ::nz, zval,i,nN,iu,nJ,j
-    !     character(len=25) :: filename
-    !     allocate(rad(Z,INT(rvals(Z)/1000+1)))
-    !     allocate(tac(Z,tstep_fin))
-        
-    !     !For all accretion steps
-    !     do nz =1,Z
-    !         zval = nz
-           
-    !         !Space steps for this accretion step - set up to check for stability
-    !         do nn = 1,INT(rvals(nz)/1000)+1
-    !             rad(nz,nn)= nn*1000 -1000
-    !         enddo
-    !         !if accreiton is finished, time steps go out to tfin (Myr)
-    !         if (nz == Z) then
-    !             do nn = 1,tstep_fin
-    !                 tac(Z,nn) = INT(tvals(z))+INT(((tfin-tvals(z))/tstep_fin)*nn)
-    !             enddo
-    !         !If accretion is continuing, time steps go between accretion step and next
-    !         else 
-    !             do nn = 1, tstep_dur
-    !                 tac(nz,nn) = tvals(nz)+INT((tvals(nz+1)-tvals(nz))*nn)
-    !             enddo
-    !         endif
-
-    !     enddo
-        
-    !     !Set length of accretion steps in time and space
-    !     nN = 50
-    !     nJ = 50 
-
-    !     !FInd dt and dx values 
-    !     allocate(delx(Z,INT(rvals(Z)/1000+1)))
-    !     allocate(delt(Z,tstep_fin))
-        
-    !     do i = 1, SIZE(rad(:,1))
-    !         do j = 1,SIZE(rad(1,:))-1
-    !             !Sets the term to 0 instead of giving a negative difference in the term
-    !             if (rad(i,j+1) ==0) then
-    !                 delx(i,j) = 0 
-    !             else
-    !             delx(i,j) = rad(i,j+1) - rad(i,j)
-    !             endif
-    !         enddo
-    !     enddo
-        
-    !     do i = 1, SIZE(tac(:,1))
-    !         do j = 1,SIZE(tac(1,:))-1
-    !             if (tac(i,j+1) ==0) then
-    !                 delt(i,j) = 0 
-    !             else
-    !                 delt(i,j) = tac(i,j+1) - tac(i,j)
-    !             endif
-    !         enddo
-    !     enddo
-
-
-     
-
-    !     write(filename,"(a)")'toutput.dat'
-    !     print "(a)",' writing to '//trim(filename)
-    !     open(newunit=iu,file=filename,status='replace',&
-    !     action='write')
-    !     write(iu,"(a)") '#  t'
-    !     do i=1,SIZE(tac(:,1))
-    !             write(iu,fmt='(4001F15.2)') tac(i,:) 
-    !     enddo
-    !     close(iu)
-
-    !     print*,(SUM(delx)/SIZE(delx))*2
-    !     print*,(SUM(delt)/SIZE(delt))*2
-    !     print*, MAXVAL(delt), MINVAL(delt)
-    !     print*,SHAPE(delt)
-
-    !     stab1 = stability(MAXVAL(delt),MAXVAL(delx)) 
-    !     print*, stab1
-    !     stab2 = stability(MAXVAL(delt),(SUM(delx)/SIZE(delx))*2) 
-    !     print*, stab2
-
-    !     !Only continue on if stab1 and stab2 are less than 0.01
-    !     if (stab1 < 0.01 .and. stab2 < 0.01) then
-            
-    !     endif
-
-        ! !check to see if the output is correct
-        ! ! write(filename,"(a)")'routput.dat'
-        ! print "(a)",' writing to '//trim(filename)
-        ! open(newunit=iu,file=filename,status='replace',&
-        ! action='write')
-        ! write(iu,"(a)") '#  r'
-        ! do i=1,SIZE(rad(1,:))
-        !         write(iu,fmt='(50F9.2)') rad(:,i) 
-        ! enddo
-        ! close(iu)
-       
-        ! print*,'size =', SIZE(tac(:,1))
-        ! write(filename,"(a)")'toutput.dat'
-        ! print "(a)",' writing to '//trim(filename)
-        ! open(newunit=iu,file=filename,status='replace',&
-        ! action='write')
-        ! write(iu,"(a)") '#  t'
-        ! do i=1,SIZE(tac(:,1))
-        !         write(iu,fmt='(50F10.0)') tac(:,i) 
-        ! enddo
-        ! close(iu)
-
-
-
-
-        ! do nz =1,Z
-        !     zval = nz
-
-        !     !Space steps for this accretion step - set up to check for stability
-        !     allocate(r(INT(rvals(nz)/1000)+1))
-        !     r = (/(i,i=0,INT(rvals(nz)), 1000)/)
-
-        !     !if accreiton is finished, time steps go out to tfin (Myr)
-        !     if (nz == Z) then
-        !         t = 
-        !     endif
-        !     deallocate(r)
-
-        ! enddo
 end module heateq

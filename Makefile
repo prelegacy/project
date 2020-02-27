@@ -24,3 +24,5 @@ grad.o: func.o
 clean:
 	rm main *.o *.mod  *.txt *.dat
 
+
+

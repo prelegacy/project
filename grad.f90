@@ -4,11 +4,12 @@ module grad
     
 contains
 
-    subroutine grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k,tT,thk)
+    subroutine grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k,tT,thk,&
+        init_array)
         real,allocatable,dimension(:,:),intent(inout) :: tT
         integer, intent(in) :: rlength, tlength,count,reg
         real,intent(in)::init,bdry
-        real,dimension(:),intent(in):: delxx,deltt,c,p,rho,k
+        real,dimension(:),intent(in):: delxx,deltt,c,p,rho,k,init_array
         real,dimension(:,:),intent(in)::Hin,tac,M,Hstart
         real,dimension(:,:),intent(inout) :: bulkk
         real,allocatable,dimension(:)::th
@@ -56,7 +57,7 @@ contains
         allocate(temp(J,N))
 
         !Fills first row of matrix T with initial condition
-        temp(1,:) = init
+        temp(1,:) = init_array(:)
         
         !Fill last column of matrix Temp with bundary temperature (Dirichlet boundary condition)
         temp(:,N) = bdry !input into sub
@@ -90,9 +91,10 @@ contains
         
 
         !for each time step
+        print*,'accretion step',count
         do nJ = 1,J-1
 
-            print*,'timestep =',nJ
+            !print*,'timestep =',nJ
 
             !Compute T at next time step
             do nN = 2,N-1
@@ -230,9 +232,9 @@ contains
         enddo
         !print*,'size of tT(1) is', SIZE(tac(count,:)), 'array size is', SIZE(tT(:,1))
         !print*,'size of tT(2) is', SIZE(temp)!, 'array size is', SIZE(tT(:,2:N+1))
-            tT(1,1) = tac(count,1) - dt
-            do i = 1, INT(SIZE(tac(1,:))-1)
-                tT(i+1,1) = tac(count,i) !Might need to fix up
+            ! tT(1,1) = tac(count,1) - dt
+            do i = 1, INT(SIZE(tac(count,:)))
+                tT(i,1) = tac(count,i) !Might need to fix up
             enddo
         
 
@@ -249,8 +251,8 @@ contains
          
         allocate(thk(14,N))
 
-        thk(1,:) = Temp(J,:)
-
+        thk(1,:) = Temp(tlength,:)
+  
         thk(2,:) = Hsil(1,:)
         thk(3,:) = Hsil(2,:)
         thk(4,:) = Hsil(3,:)
@@ -273,6 +275,31 @@ contains
         
         print*,'szie of J is', J-1
 
+        print*,'dt =', dt 
+        print*,' dr =', dr
+
+        !Check to see if thk output is correct
+
+        ! write(filename,"(a,i5.5,a)") 'thk',count,'.txt'
+        ! print "(a)",' writing to '//trim(filename)
+        ! open(newunit=iu,file=filename,status='replace',&
+        ! action='write')
+        ! write(iu,"(a)") '#  Thk'
+        !     do i=1,SIZE(thk(:,1))
+        !         write(iu,*) thk(i,:)!fmt='(10F15.2)') tT(i,:)
+        !     enddo
+        ! close(iu)
+
+        ! !Check to see if tT output is correct
+        ! write(filename,"(a,i5.5,a)") 'tt_',count,'.txt'
+        ! print "(a)",' writing to '//trim(filename)
+        ! open(newunit=iu,file=filename,status='replace',&
+        ! action='write')
+        ! write(iu,"(a)") '#  t, r'
+        !     do i=1,SIZE(tT(:,1))
+        !         write(iu,fmt='(10F15.2)') tT(i,:)
+        !     enddo
+        ! close(iu)
     end subroutine grad_a
     
 end module grad

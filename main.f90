@@ -51,9 +51,9 @@ implicit none
         ,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time,rad,tac,delt,delx,delxx,tcounter,rcounter,deltt,tac_final)
 		!Determine the stability of the program
 
-		number = SUM(delxx)/SIZE(delxx)
-		stab1 = stability(deltt(1),number)
-        stab2 = stability(deltt(50),number)
+
+		stab1 = stability(real((tac(1,2)-tac(1,1))),1000.0)
+        stab2 = stability(7000.0,1000.0)
 		
         !Only continue on if stab1 and stab2 are less than 0.01
 		if (stab1 < 0.01 .and. stab2 < 0.01) then
@@ -67,8 +67,8 @@ implicit none
 
 		! call practice(tvals)
 		
-		! call  heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,rho,tT,temps_time,&
-        ! bulkk,THK,m,Hstart)
+		call  heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,rho,tT,temps_time,&
+        bulkk,THK,m,Hstart,tstep_dur)
 
 		!Create the write outputs
 		

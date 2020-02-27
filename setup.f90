@@ -227,7 +227,7 @@ module setup
         tstep_dur = 201
 
         !# of timesteps used after accretion finishes
-        tstep_fin = INT(tfin/1e4)+1
+        tstep_fin = INT(tfin/1e4+1)
         
         !Space steps at each accretion step
         allocate(N(1,Z))
@@ -239,8 +239,7 @@ module setup
         tstep_tot = tstep_dur*z +tstep_fin
         
         !Creates matrix that tracks timestep in column 1 and temperatures for remaining radial positions
-        ! allocate(temps_time(tstep_tot,rstep_tot+1))
-        allocate(temps_time(tstep_tot,tstep_tot))
+        allocate(temps_time(tstep_tot,rstep_tot+1))        
 
         !Create a matrix to hold the values of rad and tac
         allocate(rad(Z,INT(rvals(Z)/1000+1)))
@@ -248,6 +247,11 @@ module setup
         allocate(tac(Z,tstep_dur))
         allocate(tac_final(tstep_fin))
         
+        ! print*,'shape of temps_time',shape(temps_time)
+        ! print*,'shape of rad', shape(rad)
+        ! print*,'shape of tac', shape(tac)
+        ! print*,'shape of tac_final', shape(tac_final)
+
         !For all accretion steps
         do nz =1,Z
             zval = nz
@@ -271,23 +275,26 @@ module setup
 
 
 
-        ! write(filename,"(a)")'toutput.txt'
-        ! print "(a)",' writing to '//trim(filename)
-        ! open(newunit=iu,file=filename,status='replace',&
-        ! action='write')
-        ! write(iu,"(a)") '#  t'
-        ! do i = 1,SIZE(tac(:,1))
-        !     write(iu,*)tac(i,:)
-        ! enddo
+        write(filename,"(a)")'toutput.txt'
+        print "(a)",' writing to '//trim(filename)
+        open(newunit=iu,file=filename,status='replace',&
+        action='write')
+        write(iu,"(a)") '#  t'
+        do i = 1,2!SIZE(tac(:,1))
+            write(iu,*)tac(i,:)
+        enddo
 
-        ! write(filename,"(a)")'foutput.txt'
-        ! print "(a)",' writing to '//trim(filename)
-        ! open(newunit=iu,file=filename,status='replace',&
-        ! action='write')
-        ! write(iu,"(a)") '#  t'
-        ! do i = 1,SIZE(tac_final(:))
-        !     write(iu,*)tac_final(i)
-        ! enddo
+        write(filename,"(a)")'routput.txt'
+        print "(a)",' writing to '//trim(filename)
+        open(newunit=iu,file=filename,status='replace',&
+        action='write')
+        write(iu,"(a)") '#  r'
+        do i = 1,SIZE(rad(:,1))
+            ! do nj = 1,SIZE(rad(1,:))
+                write(iu,*)rad(i,:)
+            ! enddo
+            
+        enddo
 
         !Set length of accretion steps in time and space
         nN = 50
@@ -363,13 +370,13 @@ module setup
             enddo
         enddo
 
-        do i = 1, SIZE(delt(:,1))
-            do nj = 1, size(delt(1,:))
-                if(nj == tcounter(i)) then
-                 deltt(i) = (tcounter(i)*delt(i,2))/tcounter(i)
-                endif
-            enddo
-        enddo
+        ! do i = 1, SIZE(delt(:,1))
+        !     do nj = 1, size(delt(1,:))
+        !         if(nj == tcounter(i)) then
+        !          deltt(i) = (tcounter(i)*delt(i,2))/tcounter(i)
+        !         endif
+        !     enddo
+        ! enddo
 
         ! print*,delxx
         ! number = SUM(delxx)/SIZE(delxx)
