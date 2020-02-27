@@ -145,8 +145,7 @@ module setup
         ,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time,rad,tac,delt,delx,delxx,tcounter,rcounter,deltt,tac_final)
         real,allocatable,dimension(:),intent(out):: k,rho, c,P,Hstart_imp,rvals,tvals,tcounter, rcounter,delxx,deltt
         ! real(kind=8), allocatable,dimension(:),intent(out) ::
-        real,allocatable,dimension(:,:),intent(out):: Hstart,M,N,J,temps_time,rad,tac,delt,delx
-        real,allocatable,dimension(:),intent(out):: tac_final
+        real,allocatable,dimension(:,:),intent(out):: Hstart,M,N,J,temps_time,rad,tac,delt,delx,tac_final
         integer, intent(out):: reg,Z,rstep_tot,tstep_dur,tstep_fin,tstep_tot
         real, intent(out):: init, bdry,final_rad,t_acc,t_dur,tfin
         integer ::nz, zval,i,nN,iu,nJ,ncounter
@@ -245,7 +244,7 @@ module setup
         allocate(rad(Z,INT(rvals(Z)/1000+1)))
         ! allocate(tac(Z,tstep_fin)) !Old values
         allocate(tac(Z,tstep_dur))
-        allocate(tac_final(tstep_fin))
+        allocate(tac_final(Z,tstep_fin))
         
         ! print*,'shape of temps_time',shape(temps_time)
         ! print*,'shape of rad', shape(rad)
@@ -268,7 +267,7 @@ module setup
 
         !Computing remaining time steps after accretion has ended
             do nn = 1,tstep_fin
-                tac_final(nn) = INT(tvals(50))+INT(((tfin-tvals(50))/tstep_fin)*nn)
+                tac_final(Z,nn) = INT(tvals(50))+INT(((tfin-tvals(50))/tstep_fin)*nn)
             enddo
         !If accretion is continuing, time steps go between accretion step and next
     
@@ -394,10 +393,11 @@ module setup
         ! open(newunit=iu,file=filename,status='replace',&
         ! action='write')
         ! write(iu,"(a)") '#  r'
-        ! do i=1,SIZE(delt(1,:))
-        !         write(iu,fmt='(50F15.2)') delt(:,i) 
-        ! enddo
+        ! write(iu,*) tac_final(:) 
         ! close(iu)
+
+        print*,'size of tac_final is', SIZE(tac_final)
+        
        
 
 
