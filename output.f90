@@ -125,5 +125,54 @@ contains
 
         
     end subroutine write_output
+
+    subroutine write_output_accretion(temps_time,rad)
+        real,dimension(:,:),intent(in):: temps_time,rad
+        character(len=25) :: filename
+        integer:: iu, i
+
+        print*,'started writing output'
+
+
+        write(filename,"(a)") 'alltemps.txt'
+        print "(a)",' writing to '//trim(filename)
+        open(newunit=iu,file=filename,status='replace',&
+        action='write')
+        write(iu,"(a)") '# t - first column , r - first row  '
+        write(iu,*) 0.0000,rad(50,:)
+            do i=1,SIZE(temps_time(:,1))
+                write(iu,*) temps_time(i,:)
+            enddo
+        close(iu)
+
+        write(filename,"(a)") 'rvals.txt'
+        print "(a)",' writing to '//trim(filename)
+        open(newunit=iu,file=filename,status='replace',&
+        action='write')
+        write(iu,"(a)") '#  T max vals per r'
+        do i = 1,SIZE(rad(50,:))
+            write(iu,*) rad(50,i),MAXVAL(temps_time(:,i+1))
+        enddo      
+        close(iu)
+
+        write(filename,"(a)") 'tvals.txt'
+        print "(a)",' writing to '//trim(filename)
+        open(newunit=iu,file=filename,status='replace',&
+        action='write')
+        write(iu,"(a)") '#  T max vals per timestep'
+        do i = 1,SIZE(temps_time(:,1))-1
+            write(iu,*) temps_time(i,1),MAXVAL(temps_time(i,2:SIZE(temps_time(1,:))))
+        enddo      
+        close(iu)
+
+
+        print*,''
+        print*,'Filename: alltemps - contains all radii temperatures accross time'
+        print*,''
+        print*,'Filename: rvals - contains the max radii temperatures accross time'
+        print*,''
+        print*,'Filename: tvals - contains the max temperatures accross time'
+
+    end subroutine write_output_accretion
 end module output
 

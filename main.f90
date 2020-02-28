@@ -68,7 +68,9 @@ implicit none
 		! call practice(tvals)
 		
 		call heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,rho,tT,temps_time,&
-        bulkk,THK,m,Hstart,tstep_dur,tac_final,tstep_fin,tstep_tot)
+		bulkk,THK,m,Hstart,tstep_dur,tac_final,tstep_fin,tstep_tot)
+		
+		call write_output_accretion(temps_time,rad)
 
 
 		!(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,rho,tT,temps_time,&

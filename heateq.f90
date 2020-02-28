@@ -302,7 +302,7 @@ contains
                 bulkk,M,Hstart,acc_con,reg,k,tT,thk,init_array)
             
                 ! print*,'tcounter(nz) is', tcounter(nz)
-                print*,'tac(nz) is', SIZE(tac(nz,:))
+
                 print*,'----------------------'
                 !Fils temps_time matrix with the times and temperatures
         
@@ -322,14 +322,15 @@ contains
             !     enddo
             ! close(iu)
             else 
-                print*,'past accretion---------------------------'
+
+                !Call output to do just accretion
+
+                
+                print*,'Accretion completed---------------------------'
                 !Completing the last time step using tac_final rather than tac
 
                 !If this is the last accretion step
                 !Set K computed for existing material
-                print*,'shape of bulkk',SHAPE(bulkk),SHAPE(bulkk(Z,:))
-                print*,'Z =', Z 
-                print*,'rcounter(Z-1) =', rcounter(Z-1),'length', SHAPE(rcounter)
                 
                 bulkk(nz-1,1:rcounter(nz-1)) = THK(14,:)
                 
@@ -360,7 +361,7 @@ contains
                 allocate(tT(SIZE(tac_final(Z,:)),rcounter(Z)+1))
                 
                 deltt = (tac_final(Z,2)-tac_final(Z,1))
-                print*,'shape of tac final', SHAPE(tac_final)
+              
                
                 !Might need to fix up   
                 call grad_a(nZ-1,rcounter(nz-1),tstep_fin, delxx,deltt,temp,init,bdry,Hin,c,p,tac_final,rho,&
@@ -371,19 +372,12 @@ contains
             
             endif
         enddo
-        print*,'tac final', tac_final(Z,1),nZ
+        
       
 
 
-        write(filename,"(a)") 'tempstime.txt'
-        print "(a)",' writing to '//trim(filename)
-        open(newunit=iu,file=filename,status='replace',&
-        action='write')
-        write(iu,"(a)") '#  t, r'
-            do i=1,SIZE(temps_time(:,1))
-                write(iu,*) temps_time(i,:)
-            enddo
-        close(iu)
+        !Create several outputs to work with
+
 
     end subroutine heateqn_a
 end module heateq

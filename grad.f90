@@ -21,7 +21,7 @@ contains
         character(len=25) :: filename
         !Might move heat source setup later to setup.f90
         
-        print*, 'at step ', count
+        print*, 'at accretion step ', count 
         !Abundance of Al (kg^-1)
         fAL = 2.53e23
         !Abundance of Fe (kg^-1)
@@ -91,7 +91,7 @@ contains
         
 
         !for each time step
-        print*,'accretion step',count
+       
         do nJ = 1,J-1
 
             !print*,'timestep =',nJ
@@ -241,7 +241,7 @@ contains
         ! print*,'size of tT(i,2:N+1)', SIZE(tT(:,2:N)), 'array size', SIZE(temp(:,:))
      
 
-        print*, SHAPE(temp), shape(tT)
+       
         do i = 1,SIZE(temp(:,1))
             do j = 1, SIZE(temp(1,:))
                 tT(i,j+1) = temp(i,j)
@@ -272,8 +272,6 @@ contains
         do i = 1,SIZE(thk(14,:))
             thk(14,:) = bulkk(count,i)
         enddo
-        
-        print*,'szie of J is', J-1
 
         print*,'dt =', dt 
         print*,' dr =', dr
