@@ -24,5 +24,9 @@ grad.o: func.o
 clean:
 	rm main *.o *.mod  *.txt *.dat
 
+move:
+	mv *.txt /home/ccnew1/files
+
+
 
 

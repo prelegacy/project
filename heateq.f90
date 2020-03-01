@@ -12,11 +12,11 @@ contains
         real, intent(inout):: al, E_al, tau_al, fe,E_fe,tau_fe
         real,allocatable,dimension(:,:),intent(in)::Hin,M
         real,intent(in)::init,bdry
-        real :: bulkc, firstterm,secondterm,thirdterm,stab,factor
+        real :: bulkc, firstterm,secondterm,thirdterm,factor
         real,dimension(2)::th
         real, intent(out)::q
         integer, parameter:: Reg = 2
-        integer:: N, J,I,nN,nJ,L,melting
+        integer:: N, J,I,nN,nJ,L
         
       
         
@@ -47,6 +47,7 @@ contains
         do I = 1,5
             Hmet(i,:) = Hin(2,i)
         enddo
+        
         !Sulfides
         allocate(Hsulf(5,N))
         do I = 1,5

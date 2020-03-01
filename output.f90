@@ -126,15 +126,29 @@ contains
         
     end subroutine write_output
 
-    subroutine write_output_accretion(temps_time,rad)
+    subroutine write_output_accretion(temps_time,rad,melting)
         real,dimension(:,:),intent(in):: temps_time,rad
-        character(len=25) :: filename
+        character(len=50) :: filename
+        character(len=3)::name
+        character(60)::name1,name3,name2
+        integer,intent(in) :: melting
         integer:: iu, i
 
         print*,'started writing output'
+        
+        if (melting == 1) then
+            name = 'reg'
+        elseif (melting == 2) then 
+            name = 'nms'
+        elseif (melting == 3) then
+            name = 'ncm'
+        elseif (melting == 4) then
+            name = 'Alt'
+        endif
 
+        name1 = name//'alltemps.txt'
 
-        write(filename,"(a)") 'alltemps.txt'
+        write(filename,"(a)") TRIM(name//'alltemps.txt')
         print "(a)",' writing to '//trim(filename)
         open(newunit=iu,file=filename,status='replace',&
         action='write')
@@ -145,7 +159,9 @@ contains
             enddo
         close(iu)
 
-        write(filename,"(a)") 'rvals.txt'
+        name2 = name//'rvals.txt'
+
+        write(filename,"(a,a)") name, 'rvals.txt'
         print "(a)",' writing to '//trim(filename)
         open(newunit=iu,file=filename,status='replace',&
         action='write')
@@ -155,7 +171,9 @@ contains
         enddo      
         close(iu)
 
-        write(filename,"(a)") 'tvals.txt'
+        name3 = name//'tvals.txt'
+
+        write(filename,"(a,a)") name, 'tvals.txt'
         print "(a)",' writing to '//trim(filename)
         open(newunit=iu,file=filename,status='replace',&
         action='write')
@@ -167,11 +185,12 @@ contains
 
 
         print*,''
-        print*,'Filename: alltemps - contains all radii temperatures accross time'
+        print*,'Filename: ', name1,' - contains all radii temperatures accross time'
         print*,''
-        print*,'Filename: rvals - contains the max radii temperatures accross time'
+        print*,'Filename: ',name2,' - contains the max radii temperatures accross time'
         print*,''
-        print*,'Filename: tvals - contains the max temperatures accross time'
+        print*,'Filename: ', name3 ,' tvals - contains the max temperatures accross time'
+        print*,''
 
     end subroutine write_output_accretion
 end module output

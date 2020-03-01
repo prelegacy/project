@@ -142,11 +142,11 @@ module setup
     end subroutine setupinitial
     
     subroutine gradinitial(k,reg,rho,c,P,init,bdry,Hstart,Hstart_imp,M,Z,final_rad,rvals, rstep_tot,t_acc,t_dur,tfin,tvals &
-        ,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time,rad,tac,delt,delx,delxx,tcounter,rcounter,deltt,tac_final)
+        ,tstep_dur,tstep_fin,N,J,tstep_tot,temps_time,rad,tac,delt,delx,delxx,tcounter,rcounter,deltt,tac_final,melting)
         real,allocatable,dimension(:),intent(out):: k,rho, c,P,Hstart_imp,rvals,tvals,tcounter, rcounter,delxx,deltt
         ! real(kind=8), allocatable,dimension(:),intent(out) ::
         real,allocatable,dimension(:,:),intent(out):: Hstart,M,N,J,temps_time,rad,tac,delt,delx,tac_final
-        integer, intent(out):: reg,Z,rstep_tot,tstep_dur,tstep_fin,tstep_tot
+        integer, intent(out):: reg,Z,rstep_tot,tstep_dur,tstep_fin,tstep_tot,melting
         real, intent(out):: init, bdry,final_rad,t_acc,t_dur,tfin
         integer ::nz, zval,i,nN,iu,nJ,ncounter
         character(len=25) :: filename
@@ -154,6 +154,25 @@ module setup
         ! real,intent(out):: rho
 
         print*,'gradinitial online'
+
+        print*,'What type of melting?'
+        print*,''
+        print*,'(1) Regular'
+        print*,''
+        print*,'(2) Exclue metal sulfide melting'
+        print*,''
+        print*,'(3) Exclude Conjoined melting'
+        print*,''
+        print*,'(4) Use alternate C'
+        print*,''
+        read*, melting
+
+       
+        ! case(3) !No conjoined melting
+        !     M = reshape((/1353,1809,1463,2000,1393,0,0,2000,1483,0,0,2001,1753,0,0,2002,1913,0,0,2003/),shape(M))
+        ! case(4) !Alt C values
+        !     c = (/892.93,598.21,698.89,790.64/)
+        ! end select
 
         !Thermal conductivity in J/(yr*m*K)
         allocate(k(3))
@@ -167,7 +186,13 @@ module setup
         rho = (/3440,0,0/)
 
         !Specific heat capacities [silicates, metal, sulfide, conjoined grains]
-        c = (/892,598,699,616/)
+        if (melting == 4) then
+            !Alt C values
+            c = (/892.93,598.21,698.89,790.64/)
+        else 
+            !Regular case
+            c = (/892,598,699,616/)
+        endif
 
         !Weight fraction of phases in chondrite [silicates, metal, sulfide, conjoined grains]
         P = (/0.76,0.05,0.03,0.16/)
@@ -190,8 +215,14 @@ module setup
 
         !Temperature (K) at each melting step
         allocate(M(4,5))
-        M = reshape((/1353,1809,1463,1236,1393,0,0,1400,1483,0,0,1500,1753,0,0,1600,1913,0,0,1702/),shape(M))
-
+        if (melting == 3) then
+            !No conjoined melting case
+            M = reshape((/1353,1809,1463,2000,1393,0,0,2000,1483,0,0,2001,1753,0,0,2002,1913,0,0,2003/),shape(M))
+        else 
+            !Regular case
+            M = reshape((/1353,1809,1463,1236,1393,0,0,1400,1483,0,0,1500,1753,0,0,1600,1913,0,0,1702/),shape(M))
+        endif   
+        
         !Set up accretion conditions
         !----------------------------------
         !# of accretion steps
@@ -210,13 +241,19 @@ module setup
        
         !Inputs
         !Accretion time (Myr after CAIs)
-        t_acc = 2.55e6
+        if(melting == 2) then
+            !No metal sulfide
+            t_acc = 2.353e6
+        else
+            !Regular case
+            t_acc = 2.55e6 !non-accretion code used t_acc value 2.98e6
+        endif
 
         !Accretion duration (Myr)
         t_dur = 0.35e6
 
         !Final time (MYR after cais) to compute temp out to
-        tfin = 40e6
+        tfin = 120e6!40e6
 
         !Values of time (yr) at each accretion step
         allocate(tvals(INT(z)))
@@ -270,30 +307,6 @@ module setup
                 tac_final(Z,nn) = INT(tvals(50))+INT(((tfin-tvals(50))/tstep_fin)*nn)
             enddo
         !If accretion is continuing, time steps go between accretion step and next
-    
-
-
-
-        write(filename,"(a)")'toutput.txt'
-        print "(a)",' writing to '//trim(filename)
-        open(newunit=iu,file=filename,status='replace',&
-        action='write')
-        write(iu,"(a)") '#  t'
-        do i = 1,2!SIZE(tac(:,1))
-            write(iu,*)tac(i,:)
-        enddo
-
-        write(filename,"(a)")'routput.txt'
-        print "(a)",' writing to '//trim(filename)
-        open(newunit=iu,file=filename,status='replace',&
-        action='write')
-        write(iu,"(a)") '#  r'
-        do i = 1,SIZE(rad(:,1))
-            ! do nj = 1,SIZE(rad(1,:))
-                write(iu,*)rad(i,:)
-            ! enddo
-            
-        enddo
 
         !Set length of accretion steps in time and space
         nN = 50
@@ -316,11 +329,8 @@ module setup
                     delx(i,nj) = rad(i,nj+1) - rad(i,nj)
                 endif
             enddo
-        enddo
+        enddo   
         
-        
-        
-
         do i = 1, SIZE(tac(:,1))
             do nj = 1,SIZE(tac(1,:))-1
                 if (tac(i,nj+1) ==0) then
@@ -330,7 +340,9 @@ module setup
                 endif
             enddo
         enddo
+
         allocate(rcounter(SIZE(rad(:,1))),tcounter(SIZE(tac(:,1))))
+
         do nz =1,Z
             Ncounter = 0
 
@@ -369,39 +381,7 @@ module setup
             enddo
         enddo
 
-        ! do i = 1, SIZE(delt(:,1))
-        !     do nj = 1, size(delt(1,:))
-        !         if(nj == tcounter(i)) then
-        !          deltt(i) = (tcounter(i)*delt(i,2))/tcounter(i)
-        !         endif
-        !     enddo
-        ! enddo
-
-        ! print*,delxx
-        ! number = SUM(delxx)/SIZE(delxx)
-        ! print*,number
-
-        ! print*,deltt
-        !  stab1 = stability(deltt(1),number)
-        ! stab2 = stability(deltt(50),number)
-        ! print*,stab1
-        ! print*,stab2
-
-        ! File output to check if values are being stored and can be printed correctly
-        ! write(filename,"(a)")'doutput.dat'
-        ! print "(a)",' writing to '//trim(filename)
-        ! open(newunit=iu,file=filename,status='replace',&
-        ! action='write')
-        ! write(iu,"(a)") '#  r'
-        ! write(iu,*) tac_final(:) 
-        ! close(iu)
-
         print*,'size of tac_final is', SIZE(tac_final)
-        
-       
-
-
-
 
     end subroutine gradinitial
         
