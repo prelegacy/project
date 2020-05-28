@@ -10,15 +10,16 @@ def skipper(fname, linesToSkip):#skip the starting lines for np load (quicker th
                 if i > linesToSkip-1: #at least 6th line pleae
                     yield line  #return that row please
 
-hdata = np.loadtxt(skipper('Htmaxoutput.dat',0))
-hdataa = np.loadtxt(skipper('Hrmaxoutput.dat',0))
-altcdata = np.loadtxt(skipper('AltCtmaxoutput.dat',0))
-altcdataa = np.loadtxt(skipper('AltCrmaxoutput.dat',0))
-NCMdata = np.loadtxt(skipper('NCMtmaxoutput.dat',0))
-NCMdataa = np.loadtxt(skipper('NCMrmaxoutput.dat',0))
-NMSdata = np.loadtxt(skipper('NMStmaxoutput.dat',0))
-NMScdataa = np.loadtxt(skipper('NMSrmaxoutput.dat',0))
+# hdata = np.loadtxt(skipper('Htmaxoutput.dat',0))
+# hdataa = np.loadtxt(skipper('Hrmaxoutput.dat',0))
+# altcdata = np.loadtxt(skipper('AltCtmaxoutput.dat',0))
+# altcdataa = np.loadtxt(skipper('AltCrmaxoutput.dat',0))
+# NCMdata = np.loadtxt(skipper('NCMtmaxoutput.dat',0))
+# NCMdataa = np.loadtxt(skipper('NCMrmaxoutput.dat',0))
+# NMSdata = np.loadtxt(skipper('NMStmaxoutput.dat',0))
+# NMScdataa = np.loadtxt(skipper('NMSrmaxoutput.dat',0))
 
+hdata = 
 hr = hdataa[:,0]
 htemp = hdataa[:,1]
 ht = hdata[:,0]

@@ -70,7 +70,7 @@ contains
        ! call execute_command_line("mv *.dat ~/project/output_files/")
         !call execute_command_line("cd ~/project/output_files/")
     case(2)       
-        write(filename,"(a)")'rmaxoutput.dat'
+        write(filename,"(a)")'altrmaxoutput.txt'
         print "(a)",' writing to '//trim(filename)
         open(newunit=iu,file=filename,status='new',&
         action='write')
@@ -80,7 +80,7 @@ contains
         enddo
         close(iu)
 
-        write(filename,"(a)")'tmaxoutput.dat'
+        write(filename,"(a)")'alttmaxoutput.txt'
         print "(a)",' writing to '//trim(filename)
         open(newunit=iu,file=filename,status='new',&
         action='write')

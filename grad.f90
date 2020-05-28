@@ -23,9 +23,9 @@ contains
         
         print*, 'at accretion step ', count 
         !Abundance of Al (kg^-1)
-        fAL = 2.53e23
+        fAL = 2.53e22
         !Abundance of Fe (kg^-1)
-        fFe = 2.96e24
+        fFe = 0!2.96e24
         !26Al/27Al initial ratio
         Altratio = 5e-5
         !60Fe/56Fe initial ratio
@@ -110,7 +110,7 @@ contains
             enddo
 
             !Computes residual heat of fusion values 
-            do nN = 1,N 
+            do nN = 1,N
 
                 do nW = 1,5
 
@@ -186,14 +186,17 @@ contains
                         !Do nothing
 
                         else 
-
+                            !Check to see what ranking is required here
                             if(temp(nJ+1,nN) > M(1,5)) then
-
+                                print*,'nn',nN
                                 !If the current nN is NOT in the regolith
                                 !If T exceeds silicate solidus
                                 !Set specific heat capacity for this n to k(3)
-                                bulkk(nN,:) = k(3) !Might need to swap ranking around
-
+                                if (nN > 50) then
+                                    bulkk(50,:) = k(3) !Might need to swap ranking around
+                                else 
+                                    bulkk(nN,:) = k(3)
+                                endif
                             !If T is below the silicate solidus
                             else
 

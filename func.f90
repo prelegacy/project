@@ -80,13 +80,13 @@ module functions
         !Might move heat source setup later to setup.f90
         
         !Abundance of Al (kg^-1)
-        fAL = 2.53e23
+        fAL = 0!2.53e10
         !Abundance of Fe (kg^-1)
-        fFe = 2.96e24
+        fFe = 0!2.96e24
         !26Al/27Al initial ratio
-        Altratio = 5e-5
+        Altratio = 0!5e-5
         !60Fe/56Fe initial ratio
-        Feratio = 6e-7
+        Feratio = 0!6e-7
         !26Al decay energy per atom (J)
         EAl = 6.4154e-13
         !60Fe decay energy per atom (J)

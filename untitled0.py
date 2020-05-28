@@ -26,18 +26,18 @@ temps = data[1:,1:]
 
 # Set up grid and test data
 x = radius
-y = time
+y = time[0:-2]
 
 
-# fig = plt.figure()
+fig = plt.figure()
 # ax = fig.gca(projection='3d')
 # ax.set_xlabel=('Radius (m)')
 # ax.set_ylabel=('Time (years)')
 # ax.set_zlabel=('Temperature (K)')
-# X, Y = np.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
-# surf = ax.plot_surface(X, Y, temps,cmap=cm.coolwarm,
+X, Y = np.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
+# surf = ax.contourf(X, Y, temps,cmap=cm.coolwarm,
 #                        linewidth=0, antialiased=False)
-
-# fig.colorbar(surf, shrink=0.5, aspect=5)
-plt.figure(figsize=(10,10))
-plt.plot(temps[0,:],temps[1,:])
+# ax.set_zlim(180,np.max(temps))
+surf = plt.contourf(Y,X,temps[0:-2])
+# plt.clabel(surf)
+fig.colorbar(surf)

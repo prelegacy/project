@@ -176,14 +176,15 @@ module setup
 
         !Thermal conductivity in J/(yr*m*K)
         allocate(k(3))
-        k = (/3.2e7,3.2e7,12.6e7/)
+        k = (/3.2e7,3.2e6,12.6e7/)
         
         !Regolith thickness (in number of radial space steps)
         reg = 2
 
         !Average bulk density of chondrite, previous setup allocated 3 values, but only one was used anyway
         allocate(rho(3))
-        rho = (/3440,0,0/)
+        !Values of density for H, L, and LL bodies
+        rho = (/3440,3400,3290/)
 
         !Specific heat capacities [silicates, metal, sulfide, conjoined grains]
         if (melting == 4) then

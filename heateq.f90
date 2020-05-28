@@ -82,7 +82,7 @@ contains
 
                 firstterm = (2*(bulkk(1,nN)*factor)/nN)*(temp(nJ,nN+1)-temp(nJ,nN-1))
 
-                secondterm =  ((bulkk(1,nN)*factor)/nN)*(temp(nJ,nN+1)-(2*temp(nJ,nN))+temp(nJ,nN-1))
+                secondterm =  ((bulkk(1,nN)*factor))*(temp(nJ,nN+1)-(2*temp(nJ,nN))+temp(nJ,nN-1))
 
                 thirdterm = temp(nJ,nN)+((dt(1)/bulkc)*q)
 
