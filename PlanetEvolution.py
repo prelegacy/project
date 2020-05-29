@@ -12,8 +12,9 @@ def skipper(fname, linesToSkip):#skip the starting lines for np load (quicker th
             for i, line in enumerate(fin): #for each line
                 if i > linesToSkip-1: #at least 6th line pleae
                     yield line
-                    
+#Consider only reading from file what is neccesary
 # data = np.loadtxt(skipper('regalltemps.txt',0))  
+
 r = np.arange(0,100e3,101)
 dr = np.mean(np.diff(r))
 trange = dr**2 * 0.01
@@ -32,6 +33,12 @@ M = np.array([[1353,1393,1483,1753],
               [1809,0,0,0,0],
               [1463,0,0,0,0],
               [1236,1400,1500,1600,1702]])
+#Consider having outputs written to a file to read from as well
 
-def q(x):
-    return x
+data = np.loadtxt('regalltemps.txt',usecols=0)
+data = data[1:-1]/1000000
+a = int(np.min(np.argwhere((data > 200.0)&(data <201))))
+
+temps = np.loadtxt(skipper('regalltemps.txt',a))
+
+print(temps[0,:])
