@@ -20,7 +20,7 @@ print*,'starting program'
 
 print*,'(1) Instantaneous Accretion Onion Shell model (Moskovitz & Gaidos 2011)'
 print*,'(2) Gradual accretion model'
-print*,'(3)'
+print*,'(3) Planetesimal to Planet accretion'
 read*,model
 select case(model)
 case(1)
@@ -74,6 +74,9 @@ case(2)
 
 	print*,'program completed, have a nice day!'
 	
+case(3)
+	open (unit = 1, file = "regalltemps.txt")
+	print*, 'opening completed'
 end select
 	
 end program main

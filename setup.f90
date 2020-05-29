@@ -254,7 +254,7 @@ module setup
         t_dur = 0.35e6
 
         !Final time (MYR after cais) to compute temp out to
-        tfin = 120e6!40e6
+        tfin = 500e6!40e6
 
         !Values of time (yr) at each accretion step
         allocate(tvals(INT(z)))
