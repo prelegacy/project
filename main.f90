@@ -70,7 +70,7 @@ case(2)
 	call heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,rho,tT,temps_time,&
 	bulkk,THK,m,Hstart,tstep_dur,tac_final,tstep_fin,tstep_tot)
 	
-	call write_output_accretion(temps_time,rad,melting)
+	call write_output_accretion(temps_time,rad,melting,fAl, Altratio, fFe, Feratio)
 
 	print*,'program completed, have a nice day!'
 	

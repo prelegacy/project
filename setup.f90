@@ -257,9 +257,10 @@ module setup
         tfin = 500e6!40e6
 
         !Values of time (yr) at each accretion step
-        allocate(tvals(INT(z)))
+        allocate(tvals(INT(z+1)))
         tvals = (/(i,i=INT(t_acc),INT(t_acc+t_dur),INT((t_dur)/Z))/)
-        
+        print*,'z',z,'t_acc',t_acc,'t_dur',t_dur,'Z',Z,'tvals size',size(tvals)
+        read*,
         !Number of timesteps used between accretion steps
         tstep_dur = 201
 
@@ -290,6 +291,7 @@ module setup
         ! print*,'shape of tac_final', shape(tac_final)
 
         !For all accretion steps
+        print*,'before before',size(tvals)
         do nz =1,Z
             zval = nz
            

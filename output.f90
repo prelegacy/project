@@ -130,7 +130,7 @@ contains
         real,dimension(:,:),intent(in):: temps_time,rad
         character(len=50) :: filename
         character(len=3)::name
-        character(60)::name1,name3,name2
+        character(60)::name1,name3,name2,name4
         integer,intent(in) :: melting
         integer:: iu, i
 
@@ -183,6 +183,15 @@ contains
         enddo      
         close(iu)
 
+        name4 = name//'vals.txt'
+
+        write(filename,"(a,a)") name, 'vals.txt'
+        print "(a)",' writing to '//trim(filename)
+        open(newunit=iu,file=filename,status='replace',&
+        action='write')
+        write(iu,"(a)") '#  Al, Al ratio, Fe, Fe ratio '
+        write(iu,*) fAl, Altratio, fFe, Feratio
+        close(iu)
 
         print*,''
         print*,'Filename: ', name1,' - contains all radii temperatures accross time'
@@ -190,6 +199,8 @@ contains
         print*,'Filename: ',name2,' - contains the max radii temperatures accross time'
         print*,''
         print*,'Filename: ', name3 ,' tvals - contains the max temperatures accross time'
+        print*,''
+        print*,'Filename: ', name4 ,' vals - contains the variables'
         print*,''
 
     end subroutine write_output_accretion

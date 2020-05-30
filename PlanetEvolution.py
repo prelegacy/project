@@ -22,6 +22,29 @@ print('trange =',trange)
 t = np.arange(2.853e6,500e6,trange)
 dt = np.mean(np.diff(t))
 print(dr,dt,dt/dr**2)
+######## Accretion code 
+
+#Thermal conductivity in J/(yr*m*K)
+#3 values of K are for the regolith, normal chondrite, chondrite after melting
+K = np.array([3.2e7,3.2e7,12.6e7])
+
+#Regolith thickness (in number of radial space steps)
+Reg = 2
+
+#Average bulk density of chondrite
+p = 3440
+
+#Specific heat capacities of [silicates, metal, sulfide, conjoined grains]
+c = np.array([892,598,699,616])
+
+#Weight fraction of phases in chondrite: [silicates, metal, sulfide, conjoined grains]
+P = [0.76,0.05,0.03,0.16]
+
+#Initial temp throughout asteroid and initial temp of newly accreting material
+init = 180
+init1 = 180
+
+
 
 bry = 180 
 
@@ -39,6 +62,7 @@ data = np.loadtxt('regalltemps.txt',usecols=0)
 data = data[1:-1]/1000000
 a = int(np.min(np.argwhere((data > 200.0)&(data <201))))
 
-temps = np.loadtxt(skipper('regalltemps.txt',a))
-
-print(temps[0,:])
+data = np.loadtxt(skipper('regalltemps.txt',a))
+temps = np.array(data[0,1:]) 
+print(len(temps))
+print('temp',temps)

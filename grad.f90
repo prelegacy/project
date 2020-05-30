@@ -5,7 +5,7 @@ module grad
 contains
 
     subroutine grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k,tT,thk,&
-        init_array)
+        init_array,fAL,fFe,Altratio,Feratio)
         real,allocatable,dimension(:,:),intent(inout) :: tT
         integer, intent(in) :: rlength, tlength,count,reg
         real,intent(in)::init,bdry
@@ -15,8 +15,10 @@ contains
         real,allocatable,dimension(:)::th
         real, allocatable,dimension(:,:), intent(out):: temp,thk
         real,allocatable,dimension(:,:)::Hsil,Hmet,Hsulf,Hconj
-        real :: bulkC, fAL,fFe,Altratio,Feratio,EAl,EFe,LifeAl,LifeFe,q
-        integer :: N, J, dr, dt, i, iu,ni,nj,nn,nw
+        real :: bulkC,EAl,EFe,LifeAl,LifeFe,q
+        real,intent(out)::fAL,fFe,Altratio,Feratio
+        integer :: N, J, dr, dt, i, iu,ni,nj,nn,
+        
         integer, intent(in) :: acc_con
         character(len=25) :: filename
         !Might move heat source setup later to setup.f90
