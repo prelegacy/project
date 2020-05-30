@@ -145,7 +145,7 @@ contains
     end subroutine heateqn
     
     subroutine heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,rho,tT,temps_time,&
-        bulkk,THK,m,Hstart,tstep_dur,tac_final,tstep_fin,tstep_tot)
+        bulkk,THK,m,Hstart,tstep_dur,tac_final,tstep_fin,tstep_tot,fALs,fFes,Altratio,Feratio)
         real,allocatable,dimension(:,:):: bulkk
         real, intent(inout)::init,bdry
         real,dimension(:,:),intent(inout):: rad,tac, m, Hstart,temps_time,tac_final
@@ -154,6 +154,7 @@ contains
         real,dimension(:),intent(in) :: Hstart_imp
         real, allocatable,dimension(:),intent(inout) :: init_array
         real, dimension(:), intent(in):: k 
+        real, intent(inout) :: fALs,fFes,Altratio,Feratio
         integer, intent(in):: Z,reg,tstep_tot
         integer, intent(out) :: acc_con
         integer,intent(inout) :: tstep_dur,tstep_fin
@@ -300,7 +301,7 @@ contains
                 deltt = (tac(nz,2)-tac(nz,1))
                 !Might need to fix up   
                 call grad_a(nZ,rcounter(nz),tstep_dur, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,&
-                bulkk,M,Hstart,acc_con,reg,k,tT,thk,init_array)
+                bulkk,M,Hstart,acc_con,reg,k,tT,thk,init_array,fALs,fFes,Altratio,Feratio)
             
                 ! print*,'tcounter(nz) is', tcounter(nz)
 
@@ -366,7 +367,7 @@ contains
                
                 !Might need to fix up   
                 call grad_a(nZ-1,rcounter(nz-1),tstep_fin, delxx,deltt,temp,init,bdry,Hin,c,p,tac_final,rho,&
-                bulkk,M,Hstart,acc_con,reg,k,tT,thk,init_array)
+                bulkk,M,Hstart,acc_con,reg,k,tT,thk,init_array,fALs,fFes,Altratio,Feratio)
             
                 
                 temps_time(tstep_dur*(Z):tstep_tot-1,1:(rcounter(Z)+1))=tT(:,:)

@@ -7,12 +7,13 @@ use heateq
 use output
 use trial
 implicit none
-    real, allocatable, dimension(:) :: k, rho, fal, ffe,c,r,t,dt,dr,P,Hstart_imp,rvals,tvals,tcounter,rcounter,delxx,deltt, &
-    init_array
-	! real(kind=8), allocatable,dimension(:)::
-    real, allocatable, dimension(:,:)::Hin,M,temp,Hsil,Hmet,Hsulf,Hconj,bulkk,Hstart,N,J,temps_time,rad,tac,delt,delx,&
-    tt,THK,tac_final
-real :: al_ab, fe_ab,tau_al, tau_fe, E_al, E_fe, al, fe,init,bdry,q,stab,final_rad,t_acc,t_dur,tfin,stab1, stab2
+real, allocatable, dimension(:) :: k, rho,c,r,t,dt,dr,P,Hstart_imp,rvals,tvals,tcounter,rcounter,delxx,deltt, &
+init_array,fal, ffe
+! real(kind=8), allocatable,dimension(:)::
+real, allocatable, dimension(:,:)::Hin,M,temp,Hsil,Hmet,Hsulf,Hconj,bulkk,Hstart,N,J,temps_time,rad,tac,delt,delx,&
+tt,THK,tac_final
+real :: al_ab, fe_ab,tau_al, tau_fe, E_al, E_fe, al, fe,init,&
+bdry,q,stab,final_rad,t_acc,t_dur,tfin,stab1, stab2,Altratio,Feratio,fals,ffes
 
 integer :: model,melting, reg,Z,rstep_tot,tstep_dur,tstep_fin,tstep_tot, acc_con
 
@@ -68,9 +69,9 @@ case(2)
 	endif
 	
 	call heateqn_a(k,Z,rad,reg,tac,deltt,delxx,temp,init,bdry,c,p,Hin,Hstart_imp,init_array,acc_con,rho,tT,temps_time,&
-	bulkk,THK,m,Hstart,tstep_dur,tac_final,tstep_fin,tstep_tot)
+	bulkk,THK,m,Hstart,tstep_dur,tac_final,tstep_fin,tstep_tot,fALs,fFes,Altratio,Feratio)
 	
-	call write_output_accretion(temps_time,rad,melting,fAl, Altratio, fFe, Feratio)
+	call write_output_accretion(temps_time,rad,melting,fAls, Altratio, fFes, Feratio)
 
 	print*,'program completed, have a nice day!'
 	

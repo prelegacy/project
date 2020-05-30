@@ -41,17 +41,24 @@ c = np.array([892,598,699,616])
 P = [0.76,0.05,0.03,0.16]
 
 #Initial temp throughout asteroid and initial temp of newly accreting material
-init = 180
-init1 = 180
+init = init1= 180
 
-
-
+#External temp throughout time
 bry = 180 
 
-Hin = np.array([[2000,20000,40000,120000,200000],
+#Latent heat of fusion for phases in J/kg, in steps 
+Hin=Hstart = np.array([[2000,20000,40000,120000,200000],
        [252000,0,0,0,0],
        [358000,0,0,0,0],
        [37978,4250,4647,9308,214817]])
+#Total latent heat of fusion (Htot) is divided into five parts.
+#Each part is the value of Htot multiplied by the percentage of the phase that melts at that step
+#So if first melting step caused 5% melting silicates, 5% of Htot is put as Hin(1,1)
+
+#Latent heat of fusion, same as Hstart, but different format. THis is for use in setting up Hin values. Put in as an array, in the order silicates (5 steps), metal, sulfide, conjoined (5 steps)
+Hstart_imp = np.array([20000,20000,40000,120000,20000,252000,358000,136282,23313,27815,65331,52260])
+
+#Tempearture (K) at each melting step. Should be 5 for silicates and conjoined grains, and one for isolate metal and sulfide grains
 M = np.array([[1353,1393,1483,1753],
               [1809,0,0,0,0],
               [1463,0,0,0,0],

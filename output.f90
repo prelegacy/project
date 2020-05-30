@@ -126,12 +126,13 @@ contains
         
     end subroutine write_output
 
-    subroutine write_output_accretion(temps_time,rad,melting)
+    subroutine write_output_accretion(temps_time,rad,melting,fAls, Altratio, fFes, Feratio)
         real,dimension(:,:),intent(in):: temps_time,rad
         character(len=50) :: filename
         character(len=3)::name
         character(60)::name1,name3,name2,name4
         integer,intent(in) :: melting
+        real, intent(in) :: fALs,fFes,Altratio,Feratio
         integer:: iu, i
 
         print*,'started writing output'
@@ -190,7 +191,7 @@ contains
         open(newunit=iu,file=filename,status='replace',&
         action='write')
         write(iu,"(a)") '#  Al, Al ratio, Fe, Fe ratio '
-        write(iu,*) fAl, Altratio, fFe, Feratio
+        write(iu,*) fAls, Altratio, fFes, Feratio
         close(iu)
 
         print*,''

@@ -5,7 +5,7 @@ module grad
 contains
 
     subroutine grad_a(count,rlength,tlength, delxx,deltt,temp,init,bdry,Hin,c,p,tac,rho,bulkk,M,Hstart,acc_con,reg,k,tT,thk,&
-        init_array,fAL,fFe,Altratio,Feratio)
+        init_array,fALs,fFes,Altratio,Feratio)
         real,allocatable,dimension(:,:),intent(inout) :: tT
         integer, intent(in) :: rlength, tlength,count,reg
         real,intent(in)::init,bdry
@@ -16,8 +16,8 @@ contains
         real, allocatable,dimension(:,:), intent(out):: temp,thk
         real,allocatable,dimension(:,:)::Hsil,Hmet,Hsulf,Hconj
         real :: bulkC,EAl,EFe,LifeAl,LifeFe,q
-        real,intent(out)::fAL,fFe,Altratio,Feratio
-        integer :: N, J, dr, dt, i, iu,ni,nj,nn,
+        real,intent(inout)::fALs,fFes,Altratio,Feratio
+        integer :: N, J, dr, dt, i, iu,ni,nj,nn,nw
         
         integer, intent(in) :: acc_con
         character(len=25) :: filename
@@ -25,9 +25,9 @@ contains
         
         print*, 'at accretion step ', count 
         !Abundance of Al (kg^-1)
-        fAL = 2.53e23
+        fALs = 2.53e23
         !Abundance of Fe (kg^-1)
-        fFe = 0!2.96e24
+        fFes = 0!2.96e24
         !26Al/27Al initial ratio
         Altratio = 5e-5
         !60Fe/56Fe initial ratio
@@ -101,7 +101,7 @@ contains
             !Compute T at next time step
             do nN = 2,N-1
                 !Note that our bulkk k-value is a 2D array which is updated at each accretion step
-                q = heat(fAL, Altratio, EAl, LifeAl, fFe,Feratio,EFe,LifeFe, tac(count,nJ+1))
+                q = heat(fALs, Altratio, EAl, LifeAl, fFes,Feratio,EFe,LifeFe, tac(count,nJ+1))
 
                 temp(nJ+1,nN) = ((2*bulkk(count,nN)*dt)/(rho(1)*bulkC*nN*(dr**2)))*(temp(nJ,nN+1)-temp(nJ,nN-1))+((bulkk(count,nN)*&
                 dt)/(rho(1)*bulkC*(dr**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN-1))+temp(nJ,nN)+(dt/bulkC)*q
