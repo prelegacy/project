@@ -130,7 +130,7 @@ contains
         real,dimension(:,:),intent(in):: temps_time,rad
         character(len=50) :: filename
         character(len=3)::name
-        character(60)::name1,name3,name2,name4
+        character(60)::name1,name3,name2,name4,name5
         integer,intent(in) :: melting
         real, intent(in) :: fALs,fFes,Altratio,Feratio
         integer:: iu, i

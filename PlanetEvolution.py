@@ -15,11 +15,11 @@ def skipper(fname, linesToSkip):#skip the starting lines for np load (quicker th
 #Consider only reading from file what is neccesary
 # data = np.loadtxt(skipper('regalltemps.txt',0))  
 
-r = np.arange(0,100e3,101)
+r = np.arange(0,1000e3,101)
 dr = np.mean(np.diff(r))
 trange = dr**2 * 0.01
 # print('trange =',trange)
-t = np.arange(2.853e6,500e6,trange)
+t = np.arange(200e6,500e6,trange)
 dt = np.mean(np.diff(t))
 # print(dr,dt,dt/dr**2)
 ######## Accretion code 
@@ -41,7 +41,14 @@ c = np.array([892,598,699,616])
 P = [0.76,0.05,0.03,0.16]
 
 #Initial temp throughout asteroid and initial temp of newly accreting material
-init = init1= 180
+data = np.loadtxt('regalltemps.txt',usecols=0)
+data = data[1:-1]/1000000
+a = int(np.min(np.argwhere((data > 200.0)&(data <201))))
+
+data = np.loadtxt(skipper('regalltemps.txt',a))
+init = np.array(data[0,1:]) 
+# print(len(init))
+# print('init',init)
 #Import remaining values for asteroid 
 #######
 ######
@@ -74,7 +81,7 @@ Z = 1
 R = 1000e3
 
 #Values of radius (m) at each accretion step
-Rvals = np.arange(0,R,10000)
+Rvals = np.arange(0,R,101)
 #FInal number of space steps once radius is at ifnal sice
 r_step_tot = len(Rvals)
 
@@ -144,17 +151,22 @@ def HeatEqn_Grad_A(k,K,Reg,p,c,r,t,P,init,bdry,Hin,Hstart,M,acc_con):
     #dt = np.mean(np.diff(t))
     
     #Set up matrix of J N
-    T = np.zeros((J,N))
-        
+    T = np.array([init])
+    # print(T.shape,'before')    
+    T = np.array([np.append(T,np.ones(len(r)-len(init))*180)])
+    
+    
+    return T
+# initi = len(init(1,:))
+# for i in :
+#     for j in len(init(:,1)):
+#         a
+
+
+# print(T.shape,'after')
+# T = np.append(T,[init/180],axis=0)
+
     
 #Heat equation grad a
 #Consider having outputs written to a file to read from as well
 
-# data = np.loadtxt('regalltemps.txt',usecols=0)
-# data = data[1:-1]/1000000
-# a = int(np.min(np.argwhere((data > 200.0)&(data <201))))
-
-# data = np.loadtxt(skipper('regalltemps.txt',a))
-# temps = np.array(data[0,1:]) 
-# print(len(temps))
-# print('temp',temps)
