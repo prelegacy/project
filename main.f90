@@ -20,8 +20,7 @@ integer :: model,melting, reg,Z,rstep_tot,tstep_dur,tstep_fin,tstep_tot, acc_con
 print*,'starting program'
 
 print*,'(1) Instantaneous Accretion Onion Shell model (Moskovitz & Gaidos 2011)'
-print*,'(2) Gradual accretion model'
-print*,'(3) Planetesimal to Planet accretion'
+print*,'(2) Gradual accretion 2-zone model'
 read*,model
 select case(model)
 case(1)
@@ -74,10 +73,6 @@ case(2)
 	call write_output_accretion(temps_time,rad,melting,fAls, Altratio, fFes, Feratio)
 
 	print*,'program completed, have a nice day!'
-	
-case(3)
-	open (unit = 1, file = "regalltemps.txt")
-	print*, 'opening completed'
 end select
 	
 end program main

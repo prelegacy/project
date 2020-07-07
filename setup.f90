@@ -230,7 +230,7 @@ module setup
         Z = 50
         
         !FInal radius
-        final_rad = 100e3
+        final_rad = 500e3
         !----------------------------------
 
         !Values of radius (m) at each accretion step
@@ -247,11 +247,11 @@ module setup
             t_acc = 2.353e6
         else
             !Regular case
-            t_acc = 2.55e6 !non-accretion code used t_acc value 2.98e6
+            t_acc = 1.85e6 !non-accretion code used t_acc value 2.98e6
         endif
 
         !Accretion duration (Myr)
-        t_dur = 0.35e6
+        t_dur = 1e6!0.35e6
 
         !Final time (MYR after cais) to compute temp out to
         tfin = 500e6!40e6
@@ -260,7 +260,6 @@ module setup
         allocate(tvals(INT(z+1)))
         tvals = (/(i,i=INT(t_acc),INT(t_acc+t_dur),INT((t_dur)/Z))/)
         print*,'z',z,'t_acc',t_acc,'t_dur',t_dur,'Z',Z,'tvals size',size(tvals)
-        read*,
         !Number of timesteps used between accretion steps
         tstep_dur = 201
 

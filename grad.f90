@@ -15,39 +15,19 @@ contains
         real,allocatable,dimension(:)::th
         real, allocatable,dimension(:,:), intent(out):: temp,thk
         real,allocatable,dimension(:,:)::Hsil,Hmet,Hsulf,Hconj
-        real :: bulkC,EAl,EFe,LifeAl,LifeFe,q
+        real :: bulkC,EAl,EFe,LifeAl,LifeFe,q,mass
+        real,parameter:: core_density=7870,mantle_density=3976
         real,intent(inout)::fALs,fFes,Altratio,Feratio
-        integer :: N, J, dr, dt, i, iu,ni,nj,nn,nw
+        integer :: N, J, dr, dt, i, iu,ni,nj,nn,nw,differentiation
         
         integer, intent(in) :: acc_con
         character(len=25) :: filename
-        !Might move heat source setup later to setup.f90
-        
-        print*, 'at accretion step ', count 
-        !Abundance of Al (kg^-1)
-        fALs = 2.53e23
-        !Abundance of Fe (kg^-1)
-        fFes = 0!2.96e24
-        !26Al/27Al initial ratio
-        Altratio = 5e-5
-        !60Fe/56Fe initial ratio
-        Feratio = 6e-7
-        !26Al decay energy per atom (J)
-        EAl = 6.4154e-13
-        !60Fe decay energy per atom (J)
-        EFe = 4.87e-13
-        !26Al mean life (years)
-        LifeAl = 1.07e6
-        !60Fe mean life (years)
-        LifeFe = 3.49e6
-
 
         !Import the lengths of vector r and t to make sure that they correspond to the accretion and is assigned to N and J
         ! print*,' rlength is ', rlength
         ! print*, ' tlength is', tlength
         N = rlength
         J = tlength
-
         !Size of space step and time step
         dr = INT(delxx(count))
         dt = INT(deltt(count))
@@ -66,6 +46,58 @@ contains
         
         !Set up arrays for residual heat of fusion at each space step (N) - assumes initial chondritic material is solid
 
+        !Might move heat source setup later to setup.f90
+        differentiation = 0
+        if (N > 200) then
+            if (MAXVAL(temp(:,200))>1200)  then
+                differentiation=1
+            endif
+        endif
+        
+        print*, 'at accretion step ', count,differentiation
+        !Abundance of Al (kg^-1) assuming 1.13%
+        !Over estimated the abundance?
+        mass = abs(1.333*3.14*(abs(rlength*1e3))**3)
+        !if (rlength<=100) then
+
+        fALs = rho(1)* mass *8500
+        !fALs = 2.623e23
+
+        !endif
+        !if ((rlength>100)) then
+        !fALs = 2.62e23+(rho(1)*  abs(1.333*3.14*(abs(rlength-100)*1e5)**3) *(0.0169))
+           !print*,'second'
+        !endif
+        !fALs = 2.53e23
+        !Abundance of Fe (kg^-1)
+        !if (rlength<=100) then
+
+        fFes = rho(1)* mass *182800
+        !fFes = 2.41e24
+
+        !endif
+        !if ((rlength>100)) then
+    
+        !    fFes =2.41e24+( rho(1)*  abs(1.333*3.14*(abs(rlength-100)*1e5)**3) *(0.24))
+        !endif
+        !
+        !26Al/27Al initial ratio
+        Altratio = 5e-5
+        !60Fe/56Fe initial ratio
+        Feratio = 6e-7
+        !26Al decay energy per atom (J)
+        EAl = 6.4154e-13
+        !60Fe decay energy per atom (J)
+        EFe = 4.87e-13
+        !26Al mean life (years)
+        LifeAl = 1.07e6
+        !60Fe mean life (years)
+        LifeFe = 3.49e6
+
+
+ 
+
+        
         allocate(Hsil(5,N))
         do i = 1,5
         Hsil(i,:) = Hin(i,:)
@@ -97,18 +129,34 @@ contains
         do nJ = 1,J-1
 
             !print*,'timestep =',nJ
-
             !Compute T at next time step
             do nN = 2,N-1
                 !Note that our bulkk k-value is a 2D array which is updated at each accretion step
-                q = heat(fALs, Altratio, EAl, LifeAl, fFes,Feratio,EFe,LifeFe, tac(count,nJ+1))
-
-                temp(nJ+1,nN) = ((2*bulkk(count,nN)*dt)/(rho(1)*bulkC*nN*(dr**2)))*(temp(nJ,nN+1)-temp(nJ,nN-1))+((bulkk(count,nN)*&
-                dt)/(rho(1)*bulkC*(dr**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN-1))+temp(nJ,nN)+(dt/bulkC)*q
-
-                !Neumann boundary conditions
-                temp(nJ+1,1) = temp(nJ+1,2)
-
+                if (differentiation == 0) then
+                    q = heat(fALs, Altratio, EAl, LifeAl, fFes,Feratio,EFe,LifeFe, tac(count,nJ+1))
+                    temp(nJ+1,nN) = ((2*bulkk(count,nN)*dt)/(rho(1)*bulkC*nN*(dr**2)))*(temp(nJ,nN+1)-temp(nJ,nN-1))+&
+                    ((bulkk(count,nN)*dt)/(rho(1)*bulkC*(dr**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN-1))+&
+                    temp(nJ,nN)+(dt/bulkC)*q
+                    !Neumann boundary conditions
+                    temp(nJ+1,1) = temp(nJ+1,2)
+                endif
+                if (differentiation==1) then
+                    if (nN <= 200) then  
+                        q = heat(0*fALs, Altratio, EAl, LifeAl, fFes,Feratio,EFe,LifeFe, tac(count,nJ+1))
+                        temp(nJ+1,nN) = ((2*bulkk(count,nN)*dt)/(core_density*bulkC*nN*(dr**2)))*(temp(nJ,nN+1)-&
+                        temp(nJ,nN-1))+((bulkk(count,nN)*&
+                        dt)/(core_density*bulkC*(dr**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN-1))+temp(nJ,nN)+(dt/bulkC)*q
+                    endif
+                    if (nN>200)then
+                        q = heat(fALs, Altratio, EAl, LifeAl, 0*fFes,Feratio,EFe,LifeFe, tac(count,nJ+1))
+                        temp(nJ+1,nN) = ((2*bulkk(count,nN)*dt)/(mantle_density*bulkC*nN*(dr**2)))*(temp(nJ,nN+1)-&
+                        temp(nJ,nN-1))+((bulkk(count,nN)*&
+                        dt)/(mantle_density*bulkC*(dr**2)))*(temp(nJ,nN+1)-2*temp(nJ,nN)+temp(nJ,nN-1))+temp(nJ,nN)+(dt/bulkC)*q
+                    endif
+                    !Neumann boundary conditions
+                    temp(nJ+1,1) = temp(nJ+1,2)
+                    
+                endif
             enddo
 
             !Computes residual heat of fusion values 
@@ -193,8 +241,8 @@ contains
                                 !If the current nN is NOT in the regolith
                                 !If T exceeds silicate solidus
                                 !Set specific heat capacity for this n to k(3)
-                                if (nN > nN) then
-                                    bulkk(nN,:) = k(3) !Might need to swap ranking around
+                                if (nN > 50) then
+                                    bulkk(50,:) = k(3) !Might need to swap ranking around
                                 else 
                                     bulkk(nN,:) = k(3)
                                 endif
@@ -213,8 +261,11 @@ contains
                     else 
 
                         if (temp(nJ+1,nN) > M(1,5)) then
-
-                            bulkk(nN,:) = K(3)
+                            if (nN > 50) then
+                                bulkk(50,:) = K(3)
+                            else
+                                bulkk(nN,:) = K(3)
+                            endif
 
                         !If T is below the silicate solidus
                         else    

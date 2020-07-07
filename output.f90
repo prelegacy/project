@@ -147,9 +147,9 @@ contains
             name = 'Alt'
         endif
 
-        name1 = name//'alltemps.txt'
+        name1 = name//'alltemps.dat'
 
-        write(filename,"(a)") TRIM(name//'alltemps.txt')
+        write(filename,"(a)") TRIM(name//'alltemps.dat')
         print "(a)",' writing to '//trim(filename)
         open(newunit=iu,file=filename,status='replace',&
         action='write')
